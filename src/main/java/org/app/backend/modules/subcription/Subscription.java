@@ -16,32 +16,37 @@ import org.hibernate.annotations.UuidGenerator;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Subscription {
 
-    @Id
-    @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
-    UUID id;
+  @Id
+  @GeneratedValue
+  @UuidGenerator(style = UuidGenerator.Style.TIME)
+  UUID id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    String key;
+  @Column(nullable = false, unique = true, length = 50)
+  String key;
 
-    @Column(nullable = false, length = 255)
-    String name;
+  @Column(nullable = false, length = 255)
+  String name;
 
-    @Column(name = "max_books", nullable = false)
-    Integer maxBooks;
+  @Column(name = "max_books", nullable = false)
+  Integer maxBooks;
 
-    @Column(nullable = false)
-    Integer price;
+  @Column(nullable = false)
+  Integer price;
 
-    @Column(name = "duration_days", nullable = false)
-    Integer durationDays;
+  @Column(name = "duration_days", nullable = false)
+  Integer durationDays;
 
-    @Column(name = "overdue_fee_per_day", nullable = false)
-    Integer overdueFeePerDay;
+  @Column(name = "overdue_fee_per_day", nullable = false)
+  Integer overdueFeePerDay;
 
-    @Column(name = "max_renewals", nullable = false)
-    Integer maxRenewals;
+  @Column(name = "max_renewals", nullable = false)
+  Integer maxRenewals;
 
-    @Column(name = "compensation_rate", nullable = false)
-    Integer compensationRate;
+  @Column(name = "compensation_rate", nullable = false)
+  Integer compensationRate;
+
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  SubscriptionStatus status = SubscriptionStatus.ACTIVE;
 }

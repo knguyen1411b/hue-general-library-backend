@@ -11,12 +11,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubscriptionCreateDTO {
 
-    String key;
-    String name;
-    Integer maxBooks;
-    Integer price;
-    Integer durationDays;
-    Integer overdueFeePerDay;
-    Integer maxRenewals;
-    Integer compensationRate;
+  String key;
+  String name;
+  Integer maxBooks;
+  Integer price;
+  Integer durationDays;
+  Integer overdueFeePerDay;
+  Integer maxRenewals;
+  Integer compensationRate;
 }

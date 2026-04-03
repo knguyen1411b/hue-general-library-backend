@@ -25,167 +25,131 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-    SubscriptionRepository subscriptionRepository;
-    ModelMapper modelMapper;
-    AuditLogService auditLogService;
+  SubscriptionRepository subscriptionRepository;
+  ModelMapper modelMapper;
+  AuditLogService auditLogService;
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<SubscriptionDTO> findAll(Pageable pageable) {
-        return subscriptionRepository
-            .findAll(pageable)
-            .map(sub -> modelMapper.map(sub, SubscriptionDTO.class));
+  @Override
+  @Transactional(readOnly = true)
+  public Page<SubscriptionDTO> findAll(Pageable pageable) {
+    return subscriptionRepository
+        .findAll(pageable)
+        .map(sub -> modelMapper.map(sub, SubscriptionDTO.class));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public SubscriptionDTO findById(UUID id) {
+    return subscriptionRepository
+        .findById(id)
+        .map(sub -> modelMapper.map(sub, SubscriptionDTO.class))
+        .orElseThrow(
+            () ->
+                new AppException(HttpStatus.NOT_FOUND, SubscriptionMessage.NOT_FOUND.getMessage()));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public SubscriptionDTO findByKey(String key) {
+    return subscriptionRepository
+        .findByKey(key)
+        .map(sub -> modelMapper.map(sub, SubscriptionDTO.class))
+        .orElseThrow(
+            () ->
+                new AppException(HttpStatus.NOT_FOUND, SubscriptionMessage.NOT_FOUND.getMessage()));
+  }
+
+  @Override
+  @Transactional
+  public void create(SubscriptionCreateDTO dto, CustomUserDetails actor) {
+    String normalizedKey = dto.getKey().toUpperCase();
+    if (subscriptionRepository.existsByKey(normalizedKey)) {
+      throw new AppException(HttpStatus.CONFLICT, SubscriptionMessage.KEY_EXISTS.getMessage());
+    }
+    if (subscriptionRepository.existsByName(dto.getName())) {
+      throw new AppException(HttpStatus.CONFLICT, SubscriptionMessage.NAME_EXISTS.getMessage());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public SubscriptionDTO findById(UUID id) {
-        return subscriptionRepository
+    Subscription subscription = modelMapper.map(dto, Subscription.class);
+    subscription.setKey(normalizedKey);
+    subscriptionRepository.save(subscription);
+
+    auditLogService.log(
+        actor != null ? actor.getId() : null,
+        actor != null ? actor.getUsername() : "system",
+        AuditLogAction.CREATE,
+        AuditLogEntity.SUBSCRIPTION,
+        subscription.getId().toString(),
+        AuditLogStatus.SUCCESS,
+        SubscriptionMessage.CREATE_SUCCESS.getMessage());
+  }
+
+  @Override
+  @Transactional
+  public void update(UUID id, SubscriptionUpdateDTO dto, CustomUserDetails actor) {
+    Subscription subscription =
+        subscriptionRepository
             .findById(id)
-            .map(sub -> modelMapper.map(sub, SubscriptionDTO.class))
-            .orElseThrow(() ->
-                new AppException(
-                    HttpStatus.NOT_FOUND,
-                    SubscriptionMessage.NOT_FOUND.getMessage()
-                )
-            );
+            .orElseThrow(
+                () ->
+                    new AppException(
+                        HttpStatus.NOT_FOUND, SubscriptionMessage.NOT_FOUND.getMessage()));
+
+    if (dto.getKey() != null && !dto.getKey().equalsIgnoreCase(subscription.getKey())) {
+      String normalizedKey = dto.getKey().toUpperCase();
+      if (subscriptionRepository.existsByKey(normalizedKey)) {
+        throw new AppException(HttpStatus.CONFLICT, SubscriptionMessage.KEY_EXISTS.getMessage());
+      }
+      subscription.setKey(normalizedKey);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SubscriptionDTO findByKey(String key) {
-        return subscriptionRepository
-            .findByKey(key)
-            .map(sub -> modelMapper.map(sub, SubscriptionDTO.class))
-            .orElseThrow(() ->
-                new AppException(
-                    HttpStatus.NOT_FOUND,
-                    SubscriptionMessage.NOT_FOUND.getMessage()
-                )
-            );
+    if (dto.getName() != null && !dto.getName().equals(subscription.getName())) {
+      if (subscriptionRepository.existsByName(dto.getName())) {
+        throw new AppException(HttpStatus.CONFLICT, SubscriptionMessage.NAME_EXISTS.getMessage());
+      }
+      subscription.setName(dto.getName());
     }
+    if (dto.getMaxBooks() != null) subscription.setMaxBooks(dto.getMaxBooks());
+    if (dto.getPrice() != null) subscription.setPrice(dto.getPrice());
+    if (dto.getDurationDays() != null) subscription.setDurationDays(dto.getDurationDays());
+    if (dto.getOverdueFeePerDay() != null)
+      subscription.setOverdueFeePerDay(dto.getOverdueFeePerDay());
+    if (dto.getMaxRenewals() != null) subscription.setMaxRenewals(dto.getMaxRenewals());
+    if (dto.getCompensationRate() != null)
+      subscription.setCompensationRate(dto.getCompensationRate());
 
-    @Override
-    @Transactional
-    public void create(SubscriptionCreateDTO dto, CustomUserDetails actor) {
-        if (subscriptionRepository.existsByKey(dto.getKey())) {
-            throw new AppException(
-                HttpStatus.CONFLICT,
-                SubscriptionMessage.KEY_EXISTS.getMessage()
-            );
-        }
-        if (subscriptionRepository.existsByName(dto.getName())) {
-            throw new AppException(
-                HttpStatus.CONFLICT,
-                SubscriptionMessage.NAME_EXISTS.getMessage()
-            );
-        }
+    subscriptionRepository.save(subscription);
 
-        Subscription subscription = modelMapper.map(dto, Subscription.class);
-        subscriptionRepository.save(subscription);
+    auditLogService.log(
+        actor != null ? actor.getId() : null,
+        actor != null ? actor.getUsername() : "system",
+        AuditLogAction.UPDATE,
+        AuditLogEntity.SUBSCRIPTION,
+        subscription.getId().toString(),
+        AuditLogStatus.SUCCESS,
+        SubscriptionMessage.UPDATE_SUCCESS.getMessage());
+  }
 
-        auditLogService.log(
-            actor != null ? actor.getId() : null,
-            actor != null ? actor.getUsername() : "system",
-            AuditLogAction.CREATE,
-            AuditLogEntity.SUBSCRIPTION,
-            subscription.getId().toString(),
-            AuditLogStatus.SUCCESS,
-            SubscriptionMessage.CREATE_SUCCESS.getMessage()
-        );
-    }
-
-    @Override
-    @Transactional
-    public void update(
-        UUID id,
-        SubscriptionUpdateDTO dto,
-        CustomUserDetails actor
-    ) {
-        Subscription subscription = subscriptionRepository
+  @Override
+  @Transactional
+  public void delete(UUID id, CustomUserDetails actor) {
+    Subscription subscription =
+        subscriptionRepository
             .findById(id)
-            .orElseThrow(() ->
-                new AppException(
-                    HttpStatus.NOT_FOUND,
-                    SubscriptionMessage.NOT_FOUND.getMessage()
-                )
-            );
+            .orElseThrow(
+                () ->
+                    new AppException(
+                        HttpStatus.NOT_FOUND, SubscriptionMessage.NOT_FOUND.getMessage()));
 
-        if (
-            dto.getKey() != null && !dto.getKey().equals(subscription.getKey())
-        ) {
-            if (subscriptionRepository.existsByKey(dto.getKey())) {
-                throw new AppException(
-                    HttpStatus.CONFLICT,
-                    SubscriptionMessage.KEY_EXISTS.getMessage()
-                );
-            }
-            subscription.setKey(dto.getKey());
-        }
-        if (
-            dto.getName() != null &&
-            !dto.getName().equals(subscription.getName())
-        ) {
-            if (subscriptionRepository.existsByName(dto.getName())) {
-                throw new AppException(
-                    HttpStatus.CONFLICT,
-                    SubscriptionMessage.NAME_EXISTS.getMessage()
-                );
-            }
-            subscription.setName(dto.getName());
-        }
-        if (dto.getMaxBooks() != null) subscription.setMaxBooks(
-            dto.getMaxBooks()
-        );
-        if (dto.getPrice() != null) subscription.setPrice(dto.getPrice());
-        if (dto.getDurationDays() != null) subscription.setDurationDays(
-            dto.getDurationDays()
-        );
-        if (dto.getOverdueFeePerDay() != null) subscription.setOverdueFeePerDay(
-            dto.getOverdueFeePerDay()
-        );
-        if (dto.getMaxRenewals() != null) subscription.setMaxRenewals(
-            dto.getMaxRenewals()
-        );
-        if (dto.getCompensationRate() != null) subscription.setCompensationRate(
-            dto.getCompensationRate()
-        );
+    subscription.setStatus(SubscriptionStatus.DELETED);
+    subscriptionRepository.save(subscription);
 
-        subscriptionRepository.save(subscription);
-
-        auditLogService.log(
-            actor != null ? actor.getId() : null,
-            actor != null ? actor.getUsername() : "system",
-            AuditLogAction.UPDATE,
-            AuditLogEntity.SUBSCRIPTION,
-            subscription.getId().toString(),
-            AuditLogStatus.SUCCESS,
-            SubscriptionMessage.UPDATE_SUCCESS.getMessage()
-        );
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id, CustomUserDetails actor) {
-        Subscription subscription = subscriptionRepository
-            .findById(id)
-            .orElseThrow(() ->
-                new AppException(
-                    HttpStatus.NOT_FOUND,
-                    SubscriptionMessage.NOT_FOUND.getMessage()
-                )
-            );
-
-        subscriptionRepository.delete(subscription);
-
-        auditLogService.log(
-            actor != null ? actor.getId() : null,
-            actor != null ? actor.getUsername() : "system",
-            AuditLogAction.DELETE,
-            AuditLogEntity.SUBSCRIPTION,
-            subscription.getId().toString(),
-            AuditLogStatus.SUCCESS,
-            SubscriptionMessage.DELETE_SUCCESS.getMessage()
-        );
-    }
+    auditLogService.log(
+        actor != null ? actor.getId() : null,
+        actor != null ? actor.getUsername() : "system",
+        AuditLogAction.DELETE,
+        AuditLogEntity.SUBSCRIPTION,
+        subscription.getId().toString(),
+        AuditLogStatus.SUCCESS,
+        SubscriptionMessage.DELETE_SUCCESS.getMessage());
+  }
 }
