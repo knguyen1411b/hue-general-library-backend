@@ -1,9 +1,9 @@
-package org.app.backend.modules.subcription.dto;
+package org.app.backend.modules.subscription.dto;
 
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.subcription.SubscriptionStatus;
+import org.app.backend.modules.subscription.SubscriptionStatus;
 
 @Getter
 @Setter

@@ -1,10 +1,10 @@
-package org.app.backend.modules.subcription;
+package org.app.backend.modules.subscription;
 
 import java.util.UUID;
 import org.app.backend.modules.auth.security.CustomUserDetails;
-import org.app.backend.modules.subcription.dto.SubscriptionCreateDTO;
-import org.app.backend.modules.subcription.dto.SubscriptionDTO;
-import org.app.backend.modules.subcription.dto.SubscriptionUpdateDTO;
+import org.app.backend.modules.subscription.dto.SubscriptionCreateDTO;
+import org.app.backend.modules.subscription.dto.SubscriptionDTO;
+import org.app.backend.modules.subscription.dto.SubscriptionUpdateDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -1,4 +1,4 @@
-package org.app.backend.modules.subcription;
+package org.app.backend.modules.subscription;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
