@@ -536,4 +536,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
                 .isBefore(userSubscription.getStartDate())
         ) {
             throw new UserSubscriptionValidationException(
-                User
+                UserSubscriptionMessage.END_DATE_BEFORE_START_DATE
+            );
+        }
+    }
+}
