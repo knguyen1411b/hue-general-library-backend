@@ -1,8 +1,7 @@
 package org.app.backend.modules.audit;
 
-import java.util.UUID;
-
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

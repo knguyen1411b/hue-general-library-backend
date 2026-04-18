@@ -17,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 import org.app.backend.common.constants.CloudinaryProperties;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -26,12 +27,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ApplicationConfig {
+
   CloudinaryProperties cloudinaryProperties;
 
   @Bean
-  OpenAPI openAPI() {
+  OpenAPI openAPI(@Value("${server.port:8080}") String serverPort) {
     return new OpenAPI()
-        .servers(List.of(new Server().url("http://localhost:8080").description("Local")))
+        .servers(List.of(new Server().url("http://localhost:" + serverPort).description("Local")))
         .info(
             new Info()
                 .title("Restful API server")
