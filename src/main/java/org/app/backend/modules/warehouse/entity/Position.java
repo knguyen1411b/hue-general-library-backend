@@ -1,19 +1,28 @@
 package org.app.backend.modules.warehouse.entity;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
-@Getter @Setter @NoArgsConstructor
+@Table(name = "tbl_position")
+@Getter
+@Setter
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Position {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private int rowIndex;
-    private int colIndex;
-    private int bookCount = 0;
+  @Id
+  @GeneratedValue
+  @UuidGenerator(style = UuidGenerator.Style.TIME)
+  UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "shelf_id")
-    private Shelf shelf;
+  int rowIndex;
+  int colIndex;
+  int bookCount = 0;
+
+  @ManyToOne
+  @JoinColumn(name = "shelf_id")
+  Shelf shelf;
 }

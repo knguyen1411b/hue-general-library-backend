@@ -1,17 +1,26 @@
 package org.app.backend.modules.warehouse.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import java.util.List;
+import java.util.UUID;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
-@Getter @Setter @NoArgsConstructor
+@Table(name = "tbl_floor")
+@Getter
+@Setter
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Floor {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String name;
+  @Id
+  @GeneratedValue
+  @UuidGenerator(style = UuidGenerator.Style.TIME)
+  UUID id;
 
-    @OneToMany(mappedBy = "floor", cascade = CascadeType.ALL)
-    private List<Aisle> aisles;
+  String name;
+
+  @OneToMany(mappedBy = "floor", cascade = CascadeType.ALL)
+  List<Aisle> aisles;
 }
