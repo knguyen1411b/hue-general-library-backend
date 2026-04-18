@@ -33,11 +33,18 @@ public class UserSubscriptionV1Controller {
 
   private static final Logger logger = LoggerFactory.getLogger(UserSubscriptionV1Controller.class);
 
-  @Autowired private UserSubscriptionService userSubscriptionService;
+  private final UserSubscriptionService userSubscriptionService;
+  private final UserRepository userRepository;
+  private final SubscriptionRepository subscriptionRepository;
 
-  @Autowired private UserRepository userRepository;
-
-  @Autowired private SubscriptionRepository subscriptionRepository;
+  UserSubscriptionV1Controller(
+      UserSubscriptionService userSubscriptionService,
+      UserRepository userRepository,
+      SubscriptionRepository subscriptionRepository) {
+    this.userSubscriptionService = userSubscriptionService;
+    this.userRepository = userRepository;
+    this.subscriptionRepository = subscriptionRepository;
+  }
 
   @PostMapping
   public ResponseEntity<UserSubscriptionResponseDTO> createUserSubscription(

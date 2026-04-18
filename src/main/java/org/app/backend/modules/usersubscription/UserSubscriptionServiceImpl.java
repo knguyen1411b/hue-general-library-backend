@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Implementation of {@link UserSubscriptionService} that manages user subscription logic.
  * Provides methods to create, update, cancel, activate, expire, and query user subscriptions.
  */
+@Service
 public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
     private static final Logger logger = LoggerFactory.getLogger(
