@@ -22,11 +22,11 @@ import java.lang.annotation.Target;
               @ExampleObject(
                   value =
                       """
-                                  {
-                                    "success": false,
-                                    "statusCode": 403,
-                                    "message": "You do not have permission to access this resource."
-                                  }
-                                  """)
+				{
+				  "success": false,
+				  "statusCode": 403,
+				  "message": "You do not have permission to access this resource."
+				}
+				""")
             }))
 public @interface ForbiddenApiResponse {}

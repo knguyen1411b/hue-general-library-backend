@@ -22,11 +22,11 @@ import java.lang.annotation.Target;
               @ExampleObject(
                   value =
                       """
-                                  {
-                                    "success": false,
-                                    "statusCode": 500,
-                                    "message": "An unexpected error occurred on the server."
-                                  }
-                                  """)
+				{
+				  "success": false,
+				  "statusCode": 500,
+				  "message": "An unexpected error occurred on the server."
+				}
+				""")
             }))
 public @interface InternalServerErrorApiResponse {}

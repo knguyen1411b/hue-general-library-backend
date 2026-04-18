@@ -22,11 +22,11 @@ import java.lang.annotation.Target;
               @ExampleObject(
                   value =
                       """
-                                  {
-                                    "success": false,
-                                    "statusCode": 401,
-                                    "message": "Authentication is required to access this resource."
-                                  }
-                                  """)
+				{
+				  "success": false,
+				  "statusCode": 401,
+				  "message": "Authentication is required to access this resource."
+				}
+				""")
             }))
 public @interface UnauthorizedApiResponse {}

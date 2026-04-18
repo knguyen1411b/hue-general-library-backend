@@ -22,11 +22,11 @@ import java.lang.annotation.Target;
               @ExampleObject(
                   value =
                       """
-                                                    {
-                                                      "success": false,
-                                                      "statusCode": 404,
-                                                      "message": "Resource not found"
-                                                    }
-                                                    """)
+				{
+				  "success": false,
+				  "statusCode": 404,
+				  "message": "Resource not found"
+				}
+				""")
             }))
 public @interface NotFoundApiResponse {}

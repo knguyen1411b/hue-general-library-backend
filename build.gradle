@@ -76,7 +76,7 @@ dependencies {
 
 spotless {
     java {
-        googleJavaFormat('1.22.0')
+        googleJavaFormat('1.30.0')
         removeUnusedImports()
         encoding 'UTF-8'
         trimTrailingWhitespace()

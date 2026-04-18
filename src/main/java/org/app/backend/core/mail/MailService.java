@@ -28,24 +28,24 @@ public class MailService {
     String subject = "Khôi phục mật khẩu";
     String content =
         """
-        <html>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
-              <h2 style="margin-bottom: 16px;">Khôi phục mật khẩu</h2>
-              <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
-              <p>
-                <a
-                  href="%s"
-                  style="display: inline-block; padding: 12px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px;">
-                  Đặt lại mật khẩu
-                </a>
-              </p>
-              <p>Nếu bạn không gửi yêu cầu này, hãy bỏ qua email và không chia sẻ liên kết với ai.</p>
-              <p style="word-break: break-all; color: #6b7280;">%s</p>
-            </div>
-          </body>
-        </html>
-        """
+				<html>
+				  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+				    <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+				      <h2 style="margin-bottom: 16px;">Khôi phục mật khẩu</h2>
+				      <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
+				      <p>
+				        <a
+				          href="%s"
+				          style="display: inline-block; padding: 12px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px;">
+				          Đặt lại mật khẩu
+				        </a>
+				      </p>
+				      <p>Nếu bạn không gửi yêu cầu này, hãy bỏ qua email và không chia sẻ liên kết với ai.</p>
+				      <p style="word-break: break-all; color: #6b7280;">%s</p>
+				    </div>
+				  </body>
+				</html>
+				"""
             .formatted(resetLink, resetLink);
 
     sendHtmlMail(to, subject, content);
