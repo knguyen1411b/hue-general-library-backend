@@ -61,6 +61,29 @@ export enum CardStatus {
   LOST = 'LOST'
 }
 
+export enum FloorStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
+}
+
+export enum AisleStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
+}
+
+export enum ReservationStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED'
+}
+
+export enum LibraryCardRequestStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED'
+}
+
 /**
  * ENTITIES
  */
@@ -182,12 +205,15 @@ export interface BookItem {
 export interface Floor {
   id: number;
   name: string;
+  status: FloorStatus;
 }
 
 export interface Aisle {
   id: number;
   floorId: number;
+  floorName?: string;
   name: string;
+  status: AisleStatus;
 }
 
 export interface Shelf {
@@ -203,4 +229,33 @@ export interface ShelfPosition {
   shelfId: number;
   rowIndex: number;
   columnIndex: number;
+}
+
+export interface Reservation {
+  id: string; // UUID
+  userId: string;
+  userName?: string;
+  bookItemId: string;
+  bookTitle?: string;
+  status: ReservationStatus;
+  reservationDate: string;
+  confirmDate?: string;
+  cancelDate?: string;
+}
+
+export interface Configuration {
+  id: number;
+  configKey: string;
+  configValue: string;
+  description: string;
+}
+
+export interface LibraryCardRequest {
+  id: string; // UUID
+  userId: string;
+  userName?: string;
+  status: LibraryCardRequestStatus;
+  deliveryAddress: string;
+  note?: string;
+  createdAt: string;
 }

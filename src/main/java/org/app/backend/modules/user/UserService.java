@@ -22,5 +22,7 @@ public interface UserService extends UserDetailsService {
 
   void delete(UUID id, CustomUserDetails actor);
 
+  void reportLostCard(CustomUserDetails user);
+
   CustomUserDetails loadUserById(UUID userId);
 }

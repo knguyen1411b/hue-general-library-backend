@@ -9,7 +9,5 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
 
   boolean existsByKey(String key);
 
-  Optional<Subscription> findByKey(String key);
-
   Optional<Subscription> findByName(String name);
 }

@@ -1,9 +1,9 @@
 package org.app.backend.modules.payment.dto;
 
+import java.util.UUID;
+import lombok.Data;
 import org.app.backend.modules.payment.PaymentStatus;
 import org.app.backend.modules.payment.PaymentType;
-import lombok.Data;
-import java.util.UUID;
 
 @Data
 public class PaymentUpdateDTO {

@@ -16,12 +16,11 @@ import org.app.backend.common.swagger.*;
 import org.app.backend.common.swagger.BadRequestApiResponse;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.user.dto.*;
-import org.app.backend.modules.user.UserRole;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -234,6 +233,25 @@ public class UserV1Controller {
   }
 
   public static class PagedApiResponseUserDTO extends PagedApiResponse<UserDTO> {}
+
+  @Operation(
+      summary = "Báo mất thẻ thư viện",
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
+  @PostMapping("/me/report-lost-card")
+  public ApiResponse reportLostCard(@AuthenticationPrincipal CustomUserDetails user) {
+    userService.reportLostCard(user);
+    return ApiResponse.success(UserMessage.REPORT_LOST_CARD_SUCCESS.getMessage());
+  }
 
   public static class DataApiResponseUserDTO extends DataApiResponse<UserDTO> {}
 }

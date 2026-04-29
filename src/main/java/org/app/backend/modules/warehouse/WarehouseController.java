@@ -48,7 +48,7 @@ public class WarehouseController {
   @GetMapping("/tree")
   public PagedApiResponse<Floor> getTree(@ParameterObject Pageable pageable) {
     return PagedApiResponse.success(
-        warehouseService.getWarehouseTree(pageable), WarehouseMessage.INDEX_SUCCESS.getMessage());
+        warehouseService.getWarehouseTree(pageable), WarehouseMessage.INDEX_SUCCESS);
   }
 
   @Operation(
@@ -77,7 +77,7 @@ public class WarehouseController {
   @PostMapping("/shelves")
   public DataApiResponse<Shelf> addShelf(@RequestBody AddShelfDTO dto) {
     return DataApiResponse.success(
-        warehouseService.createShelf(dto), WarehouseMessage.CREATE_SUCCESS.getMessage());
+        warehouseService.createShelf(dto), WarehouseMessage.CREATE_SUCCESS);
   }
 
   @Operation(
@@ -98,7 +98,7 @@ public class WarehouseController {
   @DeleteMapping("/shelves/{id}")
   public ApiResponse deleteShelf(@PathVariable UUID id) {
     warehouseService.deleteShelf(id);
-    return ApiResponse.success(WarehouseMessage.DELETE_SUCCESS.getMessage());
+    return ApiResponse.success(WarehouseMessage.DELETE_SUCCESS);
   }
 
   public static class PagedApiResponseFloor extends PagedApiResponse<Floor> {}

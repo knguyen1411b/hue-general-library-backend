@@ -1,9 +1,9 @@
 package org.app.backend.modules.fine.dto;
 
-import org.app.backend.modules.fine.FineStatus;
-import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.app.backend.modules.fine.FineStatus;
 
 @Data
 @Builder

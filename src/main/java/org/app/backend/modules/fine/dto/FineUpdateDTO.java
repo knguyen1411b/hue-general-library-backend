@@ -1,8 +1,7 @@
 package org.app.backend.modules.fine.dto;
 
-import org.app.backend.modules.fine.FineStatus;
 import lombok.Data;
-import java.util.UUID;
+import org.app.backend.modules.fine.FineStatus;
 
 @Data
 public class FineUpdateDTO {

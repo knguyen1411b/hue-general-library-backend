@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
@@ -16,13 +17,11 @@ import org.app.backend.modules.fine.dto.FineCreateDTO;
 import org.app.backend.modules.fine.dto.FineDTO;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fines")
 @RequiredArgsConstructor
@@ -35,9 +34,10 @@ public class FineV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = PagedApiResponseFineDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = PagedApiResponseFineDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -57,9 +57,10 @@ public class FineV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = DataApiResponseFineDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseFineDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -72,17 +73,20 @@ public class FineV1Controller {
 
   @Operation(
       summary = "Tạo phiếu phạt mới",
-      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-          required = true,
-          content = @Content(
-              mediaType = MediaType.APPLICATION_JSON_VALUE,
-              schema = @Schema(implementation = FineCreateDTO.class))),
+      requestBody =
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              required = true,
+              content =
+                  @Content(
+                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      schema = @Schema(implementation = FineCreateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "201",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -101,9 +105,10 @@ public class FineV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = DataApiResponseFineDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseFineDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -121,9 +126,10 @@ public class FineV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -137,5 +143,6 @@ public class FineV1Controller {
   }
 
   public static class PagedApiResponseFineDTO extends PagedApiResponse<FineDTO> {}
+
   public static class DataApiResponseFineDTO extends DataApiResponse<FineDTO> {}
 }

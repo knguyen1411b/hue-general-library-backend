@@ -1,10 +1,10 @@
 package org.app.backend.modules.librarycard.dto;
 
-import org.app.backend.modules.librarycard.CardStatus;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 import java.time.LocalDate;
 import java.util.UUID;
+import lombok.Data;
+import org.app.backend.modules.librarycard.CardStatus;
 
 @Data
 public class LibraryCardCreateDTO {

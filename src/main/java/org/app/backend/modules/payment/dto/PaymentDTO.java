@@ -1,10 +1,10 @@
 package org.app.backend.modules.payment.dto;
 
-import org.app.backend.modules.payment.PaymentStatus;
-import org.app.backend.modules.payment.PaymentType;
-import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.app.backend.modules.payment.PaymentStatus;
+import org.app.backend.modules.payment.PaymentType;
 
 @Data
 @Builder

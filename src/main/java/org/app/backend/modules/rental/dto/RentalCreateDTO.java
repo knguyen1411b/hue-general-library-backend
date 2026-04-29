@@ -1,9 +1,9 @@
 package org.app.backend.modules.rental.dto;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 import java.time.LocalDate;
 import java.util.UUID;
+import lombok.Data;
 
 @Data
 public class RentalCreateDTO {

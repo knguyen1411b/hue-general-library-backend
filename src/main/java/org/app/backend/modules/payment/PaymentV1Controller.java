@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
@@ -16,13 +17,11 @@ import org.app.backend.modules.payment.dto.PaymentCreateDTO;
 import org.app.backend.modules.payment.dto.PaymentDTO;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
@@ -35,9 +34,10 @@ public class PaymentV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = PagedApiResponsePaymentDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = PagedApiResponsePaymentDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -49,7 +49,8 @@ public class PaymentV1Controller {
       @RequestParam(required = false) PaymentStatus paymentStatus,
       @ParameterObject Pageable pageable) {
     return PagedApiResponse.success(
-        paymentService.findAll(pageable, userId, paymentType, paymentStatus), "Lấy danh sách thanh toán thành công");
+        paymentService.findAll(pageable, userId, paymentType, paymentStatus),
+        "Lấy danh sách thanh toán thành công");
   }
 
   @Operation(
@@ -58,9 +59,10 @@ public class PaymentV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = DataApiResponsePaymentDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponsePaymentDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -68,22 +70,26 @@ public class PaymentV1Controller {
   @GetMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public DataApiResponse<PaymentDTO> show(@PathVariable UUID id) {
-    return DataApiResponse.success(paymentService.findById(id), "Lấy chi tiết thanh toán thành công");
+    return DataApiResponse.success(
+        paymentService.findById(id), "Lấy chi tiết thanh toán thành công");
   }
 
   @Operation(
       summary = "Tạo giao dịch mới",
-      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-          required = true,
-          content = @Content(
-              mediaType = MediaType.APPLICATION_JSON_VALUE,
-              schema = @Schema(implementation = PaymentCreateDTO.class))),
+      requestBody =
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              required = true,
+              content =
+                  @Content(
+                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      schema = @Schema(implementation = PaymentCreateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "201",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -102,9 +108,10 @@ public class PaymentV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = DataApiResponsePaymentDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponsePaymentDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -113,7 +120,8 @@ public class PaymentV1Controller {
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public DataApiResponse<PaymentDTO> confirm(
       @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
-    return DataApiResponse.success(paymentService.confirm(id, actor), "Xác nhận thanh toán thành công");
+    return DataApiResponse.success(
+        paymentService.confirm(id, actor), "Xác nhận thanh toán thành công");
   }
 
   @Operation(
@@ -122,9 +130,10 @@ public class PaymentV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -138,5 +147,6 @@ public class PaymentV1Controller {
   }
 
   public static class PagedApiResponsePaymentDTO extends PagedApiResponse<PaymentDTO> {}
+
   public static class DataApiResponsePaymentDTO extends DataApiResponse<PaymentDTO> {}
 }

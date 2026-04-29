@@ -135,15 +135,6 @@ public class UserSubscriptionV1Controller {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping("/all")
-  public ResponseEntity<List<UserSubscriptionResponseDTO>> getAllUserSubscriptions() {
-    logger.debug("Getting all user subscriptions without pagination");
-    List<UserSubscription> userSubscriptions = userSubscriptionService.getAll();
-    List<UserSubscriptionResponseDTO> response =
-        userSubscriptions.stream().map(this::mapToResponseDto).collect(Collectors.toList());
-    return ResponseEntity.ok(response);
-  }
-
   @GetMapping("/user/{userId}")
   public ResponseEntity<List<UserSubscriptionResponseDTO>> getUserSubscriptionsByUserId(
       @PathVariable UUID userId) {
@@ -186,24 +177,6 @@ public class UserSubscriptionV1Controller {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping("/expired")
-  public ResponseEntity<List<UserSubscriptionResponseDTO>> getExpiredSubscriptions() {
-    logger.debug("Getting all expired subscriptions");
-    List<UserSubscription> userSubscriptions = userSubscriptionService.getExpiredSubscriptions();
-    List<UserSubscriptionResponseDTO> response =
-        userSubscriptions.stream().map(this::mapToResponseDto).collect(Collectors.toList());
-    return ResponseEntity.ok(response);
-  }
-
-  @GetMapping("/canceled")
-  public ResponseEntity<List<UserSubscriptionResponseDTO>> getCanceledSubscriptions() {
-    logger.debug("Getting all canceled subscriptions");
-    List<UserSubscription> userSubscriptions = userSubscriptionService.getCanceledSubscriptions();
-    List<UserSubscriptionResponseDTO> response =
-        userSubscriptions.stream().map(this::mapToResponseDto).collect(Collectors.toList());
-    return ResponseEntity.ok(response);
-  }
-
   @PostMapping("/{id}/activate")
   public ResponseEntity<UserSubscriptionResponseDTO> activateSubscription(@PathVariable UUID id) {
     logger.info("Activating user subscription with id: {}", id);
@@ -234,63 +207,6 @@ public class UserSubscriptionV1Controller {
     UserSubscription userSubscription =
         userSubscriptionService.renewSubscription(id, startDate, endDate);
     return ResponseEntity.ok(mapToResponseDto(userSubscription));
-  }
-
-  @GetMapping("/user/{userId}/can-subscribe/{subscriptionId}")
-  public ResponseEntity<Boolean> canUserSubscribe(
-      @PathVariable UUID userId, @PathVariable UUID subscriptionId) {
-    logger.debug("Checking if user {} can subscribe to subscription {}", userId, subscriptionId);
-    boolean canSubscribe = userSubscriptionService.canUserSubscribe(userId, subscriptionId);
-    return ResponseEntity.ok(canSubscribe);
-  }
-
-  @GetMapping("/{id}/is-active")
-  public ResponseEntity<Boolean> isSubscriptionActive(@PathVariable UUID id) {
-    logger.debug("Checking if subscription {} is active", id);
-    boolean isActive = userSubscriptionService.isSubscriptionActive(id);
-    return ResponseEntity.ok(isActive);
-  }
-
-  @GetMapping("/{id}/is-expired")
-  public ResponseEntity<Boolean> isSubscriptionExpired(@PathVariable UUID id) {
-    logger.debug("Checking if subscription {} is expired", id);
-    boolean isExpired = userSubscriptionService.isSubscriptionExpired(id);
-    return ResponseEntity.ok(isExpired);
-  }
-
-  @GetMapping("/{id}/is-canceled")
-  public ResponseEntity<Boolean> isSubscriptionCanceled(@PathVariable UUID id) {
-    logger.debug("Checking if subscription {} is canceled", id);
-    boolean isCanceled = userSubscriptionService.isSubscriptionCanceled(id);
-    return ResponseEntity.ok(isCanceled);
-  }
-
-  @GetMapping("/statistics/active")
-  public ResponseEntity<Long> countActiveSubscriptions() {
-    logger.debug("Counting active subscriptions");
-    long count = userSubscriptionService.countActiveSubscriptions();
-    return ResponseEntity.ok(count);
-  }
-
-  @GetMapping("/statistics/expired")
-  public ResponseEntity<Long> countExpiredSubscriptions() {
-    logger.debug("Counting expired subscriptions");
-    long count = userSubscriptionService.countExpiredSubscriptions();
-    return ResponseEntity.ok(count);
-  }
-
-  @GetMapping("/statistics/canceled")
-  public ResponseEntity<Long> countCanceledSubscriptions() {
-    logger.debug("Counting canceled subscriptions");
-    long count = userSubscriptionService.countCanceledSubscriptions();
-    return ResponseEntity.ok(count);
-  }
-
-  @GetMapping("/statistics/user/{userId}")
-  public ResponseEntity<Long> countByUser(@PathVariable UUID userId) {
-    logger.debug("Counting subscriptions for user: {}", userId);
-    long count = userSubscriptionService.countByUser(userId);
-    return ResponseEntity.ok(count);
   }
 
   private UserSubscriptionResponseDTO mapToResponseDto(UserSubscription userSubscription) {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.app.backend.modules.warehouse.FloorStatus;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
@@ -20,6 +21,9 @@ public class Floor {
   UUID id;
 
   String name;
+
+  @Enumerated(EnumType.STRING)
+  FloorStatus status;
 
   @OneToMany(mappedBy = "floor", cascade = CascadeType.ALL)
   List<Aisle> aisles;

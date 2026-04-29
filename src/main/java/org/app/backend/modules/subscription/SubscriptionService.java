@@ -13,8 +13,6 @@ public interface SubscriptionService {
 
   SubscriptionDTO findById(UUID id);
 
-  SubscriptionDTO findByKey(String key);
-
   void create(SubscriptionCreateDTO dto, CustomUserDetails actor);
 
   void update(UUID id, SubscriptionUpdateDTO dto, CustomUserDetails actor);

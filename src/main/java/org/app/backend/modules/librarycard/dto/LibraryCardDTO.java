@@ -1,10 +1,10 @@
 package org.app.backend.modules.librarycard.dto;
 
-import org.app.backend.modules.librarycard.CardStatus;
-import lombok.*;
-import java.time.LocalDate;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
+import lombok.*;
+import org.app.backend.modules.librarycard.CardStatus;
 
 @Data
 @Builder

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
@@ -15,15 +16,13 @@ import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.librarycard.dto.LibraryCardCreateDTO;
 import org.app.backend.modules.librarycard.dto.LibraryCardDTO;
 import org.app.backend.modules.librarycard.dto.LibraryCardUpdateDTO;
+import org.app.backend.modules.librarycardrequest.dto.LibraryCardRequestCreateDTO;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-
-import java.util.UUID;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/library-cards")
@@ -37,9 +36,10 @@ public class LibraryCardV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = PagedApiResponseLibraryCardDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = PagedApiResponseLibraryCardDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -59,9 +59,10 @@ public class LibraryCardV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = DataApiResponseLibraryCardDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseLibraryCardDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -74,17 +75,20 @@ public class LibraryCardV1Controller {
 
   @Operation(
       summary = "Tạo thẻ thư viện mới",
-      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-          required = true,
-          content = @Content(
-              mediaType = MediaType.APPLICATION_JSON_VALUE,
-              schema = @Schema(implementation = LibraryCardCreateDTO.class))),
+      requestBody =
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              required = true,
+              content =
+                  @Content(
+                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      schema = @Schema(implementation = LibraryCardCreateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "201",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -92,7 +96,8 @@ public class LibraryCardV1Controller {
   @PostMapping
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse create(
-      @Valid @RequestBody LibraryCardCreateDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
+      @Valid @RequestBody LibraryCardCreateDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
     libraryCardService.create(dto, actor);
     return ApiResponse.created("Tạo thẻ thư viện thành công");
   }
@@ -100,17 +105,20 @@ public class LibraryCardV1Controller {
   @Operation(
       summary = "Cập nhật thông tin thẻ thư viện",
       parameters = @Parameter(name = "id", required = true),
-      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-          required = true,
-          content = @Content(
-              mediaType = MediaType.APPLICATION_JSON_VALUE,
-              schema = @Schema(implementation = LibraryCardUpdateDTO.class))),
+      requestBody =
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              required = true,
+              content =
+                  @Content(
+                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      schema = @Schema(implementation = LibraryCardUpdateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -132,9 +140,10 @@ public class LibraryCardV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = DataApiResponseLibraryCardDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseLibraryCardDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -152,9 +161,10 @@ public class LibraryCardV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = DataApiResponseLibraryCardDTO.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseLibraryCardDTO.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -172,9 +182,10 @@ public class LibraryCardV1Controller {
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -187,6 +198,36 @@ public class LibraryCardV1Controller {
     return ApiResponse.success("Xóa thẻ thành công");
   }
 
+  @Operation(
+      summary = "Yêu cầu cấp thẻ vật lý mới",
+      requestBody =
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              required = true,
+              content =
+                  @Content(
+                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      schema = @Schema(implementation = LibraryCardRequestCreateDTO.class))),
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "201",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @BadRequestApiResponse
+  @PostMapping("/request")
+  @PreAuthorize("hasRole('USER')")
+  public ApiResponse requestPhysicalCard(
+      @AuthenticationPrincipal CustomUserDetails user,
+      @Valid @RequestBody LibraryCardRequestCreateDTO dto) {
+    libraryCardService.requestPhysicalCard(user, dto);
+    return ApiResponse.created("Yêu cầu cấp thẻ vật lý thành công");
+  }
+
   public static class PagedApiResponseLibraryCardDTO extends PagedApiResponse<LibraryCardDTO> {}
+
   public static class DataApiResponseLibraryCardDTO extends DataApiResponse<LibraryCardDTO> {}
 }

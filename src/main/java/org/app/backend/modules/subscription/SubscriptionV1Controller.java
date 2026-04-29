@@ -43,14 +43,6 @@ public class SubscriptionV1Controller {
         DataApiResponse.success(subscription, "Lấy thông tin gói đăng ký thành công"));
   }
 
-  @GetMapping("/key/{key}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN') or hasRole('USER')")
-  public ResponseEntity<DataApiResponse<SubscriptionDTO>> findByKey(@PathVariable String key) {
-    SubscriptionDTO subscription = subscriptionService.findByKey(key);
-    return ResponseEntity.ok(
-        DataApiResponse.success(subscription, "Lấy thông tin gói đăng ký theo key thành công"));
-  }
-
   @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ApiResponse> create(

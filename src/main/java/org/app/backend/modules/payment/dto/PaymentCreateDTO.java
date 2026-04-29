@@ -1,9 +1,9 @@
 package org.app.backend.modules.payment.dto;
 
-import org.app.backend.modules.payment.PaymentType;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 import java.util.UUID;
+import lombok.Data;
+import org.app.backend.modules.payment.PaymentType;
 
 @Data
 public class PaymentCreateDTO {

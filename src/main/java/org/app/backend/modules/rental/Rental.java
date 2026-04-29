@@ -1,14 +1,14 @@
 package org.app.backend.modules.rental;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(name = "tbl_rental")
