@@ -18,4 +18,14 @@ public class BookItemCreateDTO {
   LocalDate importDate;
 
   UUID shelfPositionId; // Cho phép null khi tạo mới
+
+  String floorName; // Optional, derived from shelfPosition if not provided
+
+  String aisleName; // Optional, derived from shelfPosition if not provided
+
+  String shelfName; // Optional, derived from shelfPosition if not provided
+
+  Integer rowIndex; // Optional, derived from shelfPosition if not provided
+
+  Integer colIndex; // Optional, derived from shelfPosition if not provided
 }

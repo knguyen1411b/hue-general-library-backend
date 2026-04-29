@@ -16,10 +16,12 @@ import org.app.backend.common.swagger.*;
 import org.app.backend.common.swagger.BadRequestApiResponse;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.user.dto.*;
+import org.app.backend.modules.user.UserRole;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -137,8 +139,20 @@ public class UserV1Controller {
   @ForbiddenApiResponse
   @BadRequestApiResponse
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse create(
       @Valid @ModelAttribute UserCreateDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
+
+    // Forbid creating ADMIN role via API
+    if (dto.getRole() == UserRole.ADMIN) {
+      return ApiResponse.forbidden("Cannot create ADMIN role via API");
+    }
+
+    // MANAGER can only create USER role
+    if (actor.getRole() == UserRole.MANAGER && dto.getRole() != UserRole.USER) {
+      return ApiResponse.forbidden("MANAGER can only create USER role accounts");
+    }
+
     userService.create(dto, actor);
     return ApiResponse.created(UserMessage.CREATE_SUCCESS.getMessage());
   }
@@ -169,10 +183,28 @@ public class UserV1Controller {
   @BadRequestApiResponse
   @NotFoundApiResponse
   @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse update(
       @PathVariable UUID id,
       @Valid @ModelAttribute UserUpdateDTO dto,
       @AuthenticationPrincipal CustomUserDetails actor) {
+
+    // Check if actor is MANAGER: can only update USER role users, cannot change roles
+    if (actor.getRole() == UserRole.MANAGER) {
+      UserDTO targetUser = userService.findById(id);
+      if (targetUser.getRole() != UserRole.USER) {
+        return ApiResponse.forbidden("MANAGER can only update USER role accounts");
+      }
+      if (dto.getRole() != null && dto.getRole() != UserRole.USER) {
+        return ApiResponse.forbidden("MANAGER cannot assign MANAGER/ADMIN roles");
+      }
+    }
+
+    // ADMIN cannot assign ADMIN role via API
+    if (dto.getRole() == UserRole.ADMIN) {
+      return ApiResponse.forbidden("Cannot assign ADMIN role via API");
+    }
+
     userService.update(id, dto, actor);
     return ApiResponse.success(UserMessage.UPDATE_SUCCESS.getMessage());
   }
