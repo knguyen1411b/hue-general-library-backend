@@ -12,6 +12,5 @@ public enum AuditLogMessage {
   INDEX_SUCCESS("Lấy danh sách nhật ký hệ thống thành công"),
   SHOW_SUCCESS("Lấy thông tin nhật ký hệ thống thành công"),
   NOT_FOUND("Không tìm thấy nhật ký hệ thống");
-
   String message;
 }

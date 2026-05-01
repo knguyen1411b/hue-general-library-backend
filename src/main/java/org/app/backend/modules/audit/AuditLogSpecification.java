@@ -43,7 +43,6 @@ public class AuditLogSpecification {
                 cb.like(cb.lower(root.get("entityId")), like),
                 cb.like(cb.lower(root.get("message")), like)));
       }
-
       return cb.and(predicates.toArray(new Predicate[0]));
     };
   }

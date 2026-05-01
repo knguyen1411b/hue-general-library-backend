@@ -78,7 +78,7 @@ public class BookItemV1Controller {
               required = true,
               content =
                   @Content(
-                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      mediaType = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
                       schema = @Schema(implementation = BookItemCreateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -91,9 +91,10 @@ public class BookItemV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @BadRequestApiResponse
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ApiResponse create(
-      @Valid @RequestBody BookItemCreateDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
+      @Valid @ModelAttribute BookItemCreateDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
     bookItemService.create(dto, actor);
     return ApiResponse.created(BookItemMessage.CREATE_SUCCESS.getMessage());
   }
@@ -109,7 +110,7 @@ public class BookItemV1Controller {
               description = "Dữ liệu cập nhật bản sách",
               content =
                   @Content(
-                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      mediaType = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
                       schema = @Schema(implementation = BookItemUpdateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -123,10 +124,10 @@ public class BookItemV1Controller {
   @ForbiddenApiResponse
   @BadRequestApiResponse
   @NotFoundApiResponse
-  @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ApiResponse update(
       @PathVariable UUID id,
-      @Valid @RequestBody BookItemUpdateDTO dto,
+      @Valid @ModelAttribute BookItemUpdateDTO dto,
       @AuthenticationPrincipal CustomUserDetails actor) {
     bookItemService.update(id, dto, actor);
     return ApiResponse.success(BookItemMessage.UPDATE_SUCCESS.getMessage());

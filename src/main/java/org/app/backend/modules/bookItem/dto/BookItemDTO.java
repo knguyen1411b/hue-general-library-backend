@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.bookItem.BookItemStatus;
+import org.app.backend.modules.bookItem.enums.BookItemStatus;
 
 @Getter
 @Setter

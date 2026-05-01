@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
+import org.app.backend.modules.bookItem.enums.BookItemStatus;
 import org.app.backend.modules.bookItem.filter.BookItemFilterDTO;
 import org.springframework.data.jpa.domain.Specification;
 

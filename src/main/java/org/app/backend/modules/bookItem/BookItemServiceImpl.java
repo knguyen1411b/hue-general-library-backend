@@ -11,6 +11,7 @@ import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.Book;
 import org.app.backend.modules.book.BookRepository;
 import org.app.backend.modules.bookItem.dto.*;
+import org.app.backend.modules.bookItem.enums.BookItemStatus;
 import org.app.backend.modules.bookItem.filter.BookItemFilterDTO;
 import org.app.backend.modules.warehouse.entity.Position;
 import org.app.backend.modules.warehouse.repository.PositionRepository;

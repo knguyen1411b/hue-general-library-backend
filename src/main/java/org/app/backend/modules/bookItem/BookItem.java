@@ -7,6 +7,7 @@ import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.book.Book;
+import org.app.backend.modules.bookItem.enums.BookItemStatus;
 import org.app.backend.modules.warehouse.entity.Position;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
