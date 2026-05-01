@@ -9,15 +9,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface SubscriptionService {
-  Page<SubscriptionDTO> findAll(Pageable pageable);
+    Page<SubscriptionDTO> findAll(Pageable pageable);
 
-  SubscriptionDTO findById(UUID id);
+    SubscriptionDTO findById(UUID id);
 
-  SubscriptionDTO findByKey(String key);
+    SubscriptionDTO findByKey(String key);
 
-  void create(SubscriptionCreateDTO dto, CustomUserDetails actor);
+    void create(SubscriptionCreateDTO dto, CustomUserDetails actor);
 
-  void update(UUID id, SubscriptionUpdateDTO dto, CustomUserDetails actor);
+    void update(UUID id, SubscriptionUpdateDTO dto, CustomUserDetails actor);
 
-  void delete(UUID id, CustomUserDetails actor);
+    void delete(UUID id, CustomUserDetails actor);
 }

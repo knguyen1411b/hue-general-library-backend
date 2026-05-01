@@ -11,5 +11,6 @@ public enum AuditLogAction {
 
   CREATE,
   UPDATE,
-  DELETE
+  DELETE,
+  RESTORE,
 }

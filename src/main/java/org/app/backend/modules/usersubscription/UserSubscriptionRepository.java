@@ -6,9 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserSubscriptionRepository extends JpaRepository<UserSubscription, UUID> {
-  boolean existsByUserIdAndSubscriptionId(UUID userId, UUID subscriptionId);
+  boolean existsByUserIdAndStatus(UUID userId, UserSubscriptionStatus status);
 
-  java.util.List<UserSubscription> findByUserId(UUID userId);
-
-  java.util.List<UserSubscription> findBySubscriptionId(UUID subscriptionId);
+  boolean existsBySubscriptionIdAndStatus(UUID subscriptionId, UserSubscriptionStatus status);
 }
