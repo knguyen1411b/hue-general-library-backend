@@ -7,5 +7,7 @@ public enum AuditLogEntity {
   SUBSCRIPTION,
   CATEGORY,
   BOOK,
-  BOOK_ITEM
+  BOOK_ITEM,
+  RENTAL,
+  FINE
 }

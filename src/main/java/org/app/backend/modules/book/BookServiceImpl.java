@@ -52,7 +52,7 @@ public class BookServiceImpl implements BookService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('MANAGER')")
   public void create(@NonNull BookCreateDTO dto, CustomUserDetails actor) {
     validateIsbnAvailability(dto.getIsbn(), null);
 
@@ -61,17 +61,24 @@ public class BookServiceImpl implements BookService {
             .findById(dto.getCategoryId())
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
 
+    // Configure ModelMapper to skip id for CREATE flow (prevent
+    // ObjectOptimisticLockingFailureException)
+    modelMapper
+        .typeMap(BookCreateDTO.class, Book.class)
+        .addMappings(mapper -> mapper.skip(Book::setId));
+
     Book book = modelMapper.map(dto, Book.class);
+    // Ensure id is null for INSERT (not UPDATE)
+    book.setId(null);
     book.setCategory(category);
     book.setStatus(BookStatus.ACTIVE);
 
-    bookRepository.save(book);
-
     if (dto.getThumbnail() != null) {
-      book.setThumbnailUrl(
-          fileService.upload(dto.getThumbnail(), book.getId().toString() + "_thumb"));
-      bookRepository.save(book);
+      String url = fileService.upload(dto.getThumbnail(), "temp");
+      book.setThumbnailUrl(url);
     }
+
+    bookRepository.save(book);
 
     auditLogService.log(
         actor != null ? actor.getId() : null,
