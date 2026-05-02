@@ -36,3 +36,10 @@ out/
 ### VS Code ###
 .vscode/
 .zed/
+
+### github
+.devcontainer/
+.github/
+
+### kilo
+.kilo/
