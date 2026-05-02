@@ -30,80 +30,164 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/subscriptions")
 @RequiredArgsConstructor
-@Tag(name = "Gói cước", description = "Các API dùng để quản lý các gói cước (subscription) trong thư viện")
+@Tag(
+    name = "Gói cước",
+    description = "Các API dùng để quản lý các gói cước (subscription) trong thư viện"
+)
 public class SubscriptionV1Controller {
 
     private final SubscriptionService subscriptionService;
 
-    @Operation(summary = "Lấy danh sách gói đăng ký có phân trang", responses = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedApiResponseSubscriptionDTO.class))),
-    })
+    @Operation(
+        summary = "Lấy danh sách gói đăng ký có phân trang",
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(
+                        implementation = PagedApiResponseSubscriptionDTO.class
+                    )
+                )
+            ),
+        }
+    )
     @BadRequestApiResponse
-    @UnauthorizedApiResponse
     @ForbiddenApiResponse
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public PagedApiResponse<SubscriptionDTO> index(
-            @ParameterObject Pageable pageable) {
+        @ParameterObject Pageable pageable
+    ) {
         return PagedApiResponse.success(
-                subscriptionService.findAll(pageable),
-                SubscriptionMessage.INDEX_SUCCESS.getMessage());
+            subscriptionService.findAll(pageable),
+            SubscriptionMessage.INDEX_SUCCESS.getMessage()
+        );
     }
 
-    @Operation(summary = "Lấy chi tiết gói đăng ký theo ID", parameters = {
-            @Parameter(name = "id", description = "ID của gói đăng ký", required = true),
-    }, responses = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DataApiResponseSubscriptionDTO.class))),
-    })
+    @Operation(
+        summary = "Lấy chi tiết gói đăng ký theo ID",
+        parameters = {
+            @Parameter(
+                name = "id",
+                description = "ID của gói đăng ký",
+                required = true
+            ),
+        },
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(
+                        implementation = DataApiResponseSubscriptionDTO.class
+                    )
+                )
+            ),
+        }
+    )
     @NotFoundApiResponse
-    @UnauthorizedApiResponse
     @ForbiddenApiResponse
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN') or hasRole('USER')")
     public DataApiResponse<SubscriptionDTO> show(@PathVariable UUID id) {
         return DataApiResponse.success(
-                subscriptionService.findById(id),
-                SubscriptionMessage.SHOW_SUCCESS.getMessage());
+            subscriptionService.findById(id),
+            SubscriptionMessage.SHOW_SUCCESS.getMessage()
+        );
     }
 
-    @Operation(summary = "Lấy chi tiết gói đăng ký theo key", parameters = {
-            @Parameter(name = "key", description = "Key của gói đăng ký", required = true),
-    }, responses = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DataApiResponseSubscriptionDTO.class))),
-    })
+    @Operation(
+        summary = "Lấy chi tiết gói đăng ký theo key",
+        parameters = {
+            @Parameter(
+                name = "key",
+                description = "Key của gói đăng ký",
+                required = true
+            ),
+        },
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(
+                        implementation = DataApiResponseSubscriptionDTO.class
+                    )
+                )
+            ),
+        }
+    )
     @NotFoundApiResponse
-    @UnauthorizedApiResponse
     @ForbiddenApiResponse
     @GetMapping("/key/{key}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN') or hasRole('USER')")
     public DataApiResponse<SubscriptionDTO> findByKey(
-            @PathVariable String key) {
+        @PathVariable String key
+    ) {
         return DataApiResponse.success(
-                subscriptionService.findByKey(key),
-                SubscriptionMessage.SHOW_SUCCESS.getMessage());
+            subscriptionService.findByKey(key),
+            SubscriptionMessage.SHOW_SUCCESS.getMessage()
+        );
     }
 
-    @Operation(summary = "Tạo mới gói đăng ký", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = SubscriptionCreateDTO.class))), responses = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
-    })
+    @Operation(
+        summary = "Tạo mới gói đăng ký",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = SubscriptionCreateDTO.class)
+            )
+        ),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "201",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)
+                )
+            ),
+        }
+    )
     @UnauthorizedApiResponse
     @ForbiddenApiResponse
     @BadRequestApiResponse
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(
-            @Valid @RequestBody SubscriptionCreateDTO dto,
-            @AuthenticationPrincipal CustomUserDetails actor) {
+        @Valid @RequestBody SubscriptionCreateDTO dto,
+        @AuthenticationPrincipal CustomUserDetails actor
+    ) {
         subscriptionService.create(dto, actor);
         return ApiResponse.created(
-                SubscriptionMessage.CREATE_SUCCESS.getMessage());
+            SubscriptionMessage.CREATE_SUCCESS.getMessage()
+        );
     }
 
-    @Operation(summary = "Cập nhật gói đăng ký theo ID", parameters = {
-            @Parameter(name = "id", description = "ID của gói đăng ký cần cập nhật", required = true),
-    }, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = SubscriptionUpdateDTO.class))), responses = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
-    })
+    @Operation(
+        summary = "Cập nhật gói đăng ký theo ID",
+        parameters = {
+            @Parameter(
+                name = "id",
+                description = "ID của gói đăng ký cần cập nhật",
+                required = true
+            ),
+        },
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = SubscriptionUpdateDTO.class)
+            )
+        ),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)
+                )
+            ),
+        }
+    )
     @UnauthorizedApiResponse
     @ForbiddenApiResponse
     @BadRequestApiResponse
@@ -111,37 +195,54 @@ public class SubscriptionV1Controller {
     @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse update(
-            @PathVariable UUID id,
-            @Valid @RequestBody SubscriptionUpdateDTO dto,
-            @AuthenticationPrincipal CustomUserDetails actor) {
+        @PathVariable UUID id,
+        @Valid @RequestBody SubscriptionUpdateDTO dto,
+        @AuthenticationPrincipal CustomUserDetails actor
+    ) {
         subscriptionService.update(id, dto, actor);
         return ApiResponse.success(
-                SubscriptionMessage.UPDATE_SUCCESS.getMessage());
+            SubscriptionMessage.UPDATE_SUCCESS.getMessage()
+        );
     }
 
-    @Operation(summary = "Xóa gói đăng ký theo ID", description = "Xóa gói đăng ký dựa trên ID.", parameters = {
-            @Parameter(name = "id", description = "ID của gói đăng ký cần xóa", required = true),
-    }, responses = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
-    })
+    @Operation(
+        summary = "Xóa gói đăng ký theo ID",
+        description = "Xóa gói đăng ký dựa trên ID.",
+        parameters = {
+            @Parameter(
+                name = "id",
+                description = "ID của gói đăng ký cần xóa",
+                required = true
+            ),
+        },
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)
+                )
+            ),
+        }
+    )
     @UnauthorizedApiResponse
     @ForbiddenApiResponse
     @NotFoundApiResponse
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse delete(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal CustomUserDetails actor) {
+        @PathVariable UUID id,
+        @AuthenticationPrincipal CustomUserDetails actor
+    ) {
         subscriptionService.delete(id, actor);
         return ApiResponse.success(
-                SubscriptionMessage.DELETE_SUCCESS.getMessage());
+            SubscriptionMessage.DELETE_SUCCESS.getMessage()
+        );
     }
 
     public static class PagedApiResponseSubscriptionDTO
-            extends PagedApiResponse<SubscriptionDTO> {
-    }
+        extends PagedApiResponse<SubscriptionDTO> {}
 
     public static class DataApiResponseSubscriptionDTO
-            extends DataApiResponse<SubscriptionDTO> {
-    }
+        extends DataApiResponse<SubscriptionDTO> {}
 }

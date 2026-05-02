@@ -129,14 +129,19 @@ public class UserServiceImpl implements UserService {
     user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
     userRepository.save(user);
 
-    if (dto.getAvatar() != null) {
-      user.setAvatarUrl(fileService.upload(dto.getAvatar(), user.getId().toString() + "_avatar"));
+    try {
+      if (dto.getAvatar() != null) {
+        user.setAvatarUrl(fileService.upload(dto.getAvatar(), user.getId().toString() + "_avatar"));
+      }
+      user.setIdentityFrontUrl(
+          fileService.upload(dto.getIdentityFront(), user.getId().toString() + "_identity_front"));
+      user.setIdentityBackUrl(
+          fileService.upload(dto.getIdentityBack(), user.getId().toString() + "_identity_back"));
+      userRepository.save(user);
+    } catch (Exception e) {
+      throw new AppException(HttpStatus.BAD_REQUEST, "Lỗi upload file: " + e.getMessage());
     }
-    user.setIdentityFrontUrl(
-        fileService.upload(dto.getIdentityFront(), user.getId().toString() + "_identity_front"));
-    user.setIdentityBackUrl(
-        fileService.upload(dto.getIdentityBack(), user.getId().toString() + "_identity_back"));
-    userRepository.save(user);
+
     auditLogService.log(
         actor != null ? actor.getId() : null,
         actor != null ? actor.getUsername() : "system",
@@ -169,13 +174,39 @@ public class UserServiceImpl implements UserService {
 
     if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
       validateEmailAvailability(dto.getEmail(), user.getEmail());
+      user.setEmail(dto.getEmail());
     }
 
     if (dto.getPhone() != null && !dto.getPhone().isBlank()) {
       validatePhoneAvailability(dto.getPhone(), user.getPhone());
+      user.setPhone(dto.getPhone());
     }
 
-    modelMapper.map(dto, user);
+    if (dto.getFullName() != null && !dto.getFullName().isBlank()) {
+      user.setFullName(dto.getFullName());
+    }
+
+    if (dto.getAddress() != null && !dto.getAddress().isBlank()) {
+      user.setAddress(dto.getAddress());
+    }
+
+    if (dto.getGender() != null) {
+      user.setGender(dto.getGender());
+    }
+
+    if (dto.getBirthday() != null) {
+      user.setBirthday(dto.getBirthday());
+    }
+
+    if (dto.getStatus() != null) {
+      user.setStatus(dto.getStatus());
+    }
+
+    if (dto.getRole() != null) {
+      user.setRole(dto.getRole());
+    }
+
+    userRepository.save(user);
     auditLogService.log(
         actor != null ? actor.getId() : null,
         actor != null ? actor.getUsername() : "system",
@@ -195,6 +226,8 @@ public class UserServiceImpl implements UserService {
             .findById(id)
             .orElseThrow(
                 () -> new AppException(HttpStatus.NOT_FOUND, UserMessage.NOT_FOUND.getMessage()));
+    user.setStatus(UserStatus.DELETED);
+    userRepository.save(user);
     auditLogService.log(
         actor != null ? actor.getId() : null,
         actor != null ? actor.getUsername() : "system",
@@ -203,7 +236,6 @@ public class UserServiceImpl implements UserService {
         user.getId().toString(),
         AuditLogStatus.SUCCESS,
         "Xóa người dùng thành công: " + user.getUsername());
-    user.setStatus(UserStatus.DELETED);
   }
 
   @Override

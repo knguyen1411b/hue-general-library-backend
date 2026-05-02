@@ -22,8 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -50,7 +50,7 @@ public class AppSecurityConfig {
   SecurityFilterChain securityFilterChain(
       HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable);
-    http.cors(cors -> {});
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource())); // ← SỬA Ở ĐÂY
 
     http.authorizeHttpRequests(
         auth ->
@@ -86,17 +86,21 @@ public class AppSecurityConfig {
   }
 
   @Bean
-  CorsFilter corsFilter() {
+  CorsConfigurationSource corsConfigurationSource() { // ← BEAN MỚI THAY THẾ
     CorsConfiguration cors = new CorsConfiguration();
-    cors.setAllowCredentials(false);
-    cors.setAllowedOriginPatterns(List.of("*"));
+    cors.setAllowCredentials(true);
+    cors.setAllowedOriginPatterns(
+        List.of(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "https://localhost:*",
+            "https://127.0.0.1:*"));
     cors.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-    cors.setAllowedHeaders(List.of("*"));
+    cors.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
     cors.setExposedHeaders(List.of("Authorization"));
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", cors);
-
-    return new CorsFilter(source);
+    return source;
   }
 }

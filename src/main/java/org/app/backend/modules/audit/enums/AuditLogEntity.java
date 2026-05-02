@@ -5,4 +5,9 @@ public enum AuditLogEntity {
   AUTH,
   ORDER,
   SUBSCRIPTION,
+  CATEGORY,
+  BOOK,
+  BOOK_ITEM,
+  RENTAL,
+  FINE
 }

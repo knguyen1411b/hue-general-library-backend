@@ -3,6 +3,7 @@ package org.app.backend.modules.usersubscription;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.usersubscription.exception.UserSubscriptionNotFoundException;
 import org.app.backend.modules.usersubscription.exception.UserSubscriptionValidationException;
 import org.slf4j.Logger;
@@ -10,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 /**
