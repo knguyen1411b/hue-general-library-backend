@@ -1,18 +1,18 @@
 package org.app.backend.modules.usersubscription;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserSubscriptionRepository
-    extends JpaRepository<UserSubscription, UUID>
-{
+public interface UserSubscriptionRepository extends JpaRepository<UserSubscription, UUID> {
+
     boolean existsByUserIdAndStatus(UUID userId, UserSubscriptionStatus status);
+
+    boolean existsBySubscriptionIdAndStatus(UUID subscriptionId, UserSubscriptionStatus status);
 
     List<UserSubscription> findByUserId(UUID userId);
 
@@ -20,10 +20,12 @@ public interface UserSubscriptionRepository
 
     List<UserSubscription> findByStatus(UserSubscriptionStatus status);
 
-    @Query(
-        "SELECT us FROM UserSubscription us WHERE us.user.id = :userId AND us.endDate > CURRENT_TIMESTAMP ORDER BY us.endDate DESC LIMIT 1"
-    )
-    Optional<UserSubscription> findActiveSubscriptionByUserId(
-        @Param("userId") UUID userId
+    List<UserSubscription> findByUserIdAndStatus(UUID userId, UserSubscriptionStatus status);
+
+    long countByStatus(UserSubscriptionStatus status);
+
+    Optional<UserSubscription> findTopByUserIdAndEndDateAfterOrderByEndDateDesc(
+        UUID userId,
+        LocalDate now
     );
 }

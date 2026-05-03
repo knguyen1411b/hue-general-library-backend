@@ -30,7 +30,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     ModelMapper modelMapper;
     AuditLogService auditLogService;
 
-<<<<<<< HEAD
   @Override
   @Transactional(readOnly = true)
   public Page<SubscriptionDTO> findAll(Pageable pageable) {
@@ -39,35 +38,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .map(sub -> modelMapper.map(sub, SubscriptionDTO.class));
   }
 
-  @Override
-  @Transactional(readOnly = true)
-  public SubscriptionDTO findById(UUID id) {
-    return subscriptionRepository
-        .findById(id)
-        .map(sub -> modelMapper.map(sub, SubscriptionDTO.class))
-        .orElseThrow(
-            () ->
-                new AppException(HttpStatus.NOT_FOUND, SubscriptionMessage.NOT_FOUND.getMessage()));
-  }
-
-  @Override
-  @Transactional
-  public void create(SubscriptionCreateDTO dto, CustomUserDetails actor) {
-    String normalizedKey = dto.getKey().toUpperCase();
-    if (subscriptionRepository.existsByKey(normalizedKey)) {
-      throw new AppException(HttpStatus.CONFLICT, SubscriptionMessage.KEY_EXISTS.getMessage());
-    }
-    if (subscriptionRepository.existsByName(dto.getName())) {
-      throw new AppException(HttpStatus.CONFLICT, SubscriptionMessage.NAME_EXISTS.getMessage());
-=======
-    @Override
-    @Transactional(readOnly = true)
-    public Page<SubscriptionDTO> findAll(Pageable pageable) {
-        return subscriptionRepository
-            .findAll(pageable)
-            .map(sub -> modelMapper.map(sub, SubscriptionDTO.class));
->>>>>>> origin/dev/knguyen1411b
-    }
 
     @Override
     @Transactional(readOnly = true)
