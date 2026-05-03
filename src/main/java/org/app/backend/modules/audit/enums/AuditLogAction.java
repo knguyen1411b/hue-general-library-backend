@@ -1,21 +1,22 @@
 package org.app.backend.modules.audit.enums;
 
 public enum AuditLogAction {
-  LOGIN,
-  LOGOUT,
-  SIGN_UP,
-  REFRESH_TOKEN,
-  CHANGE_PASSWORD,
-  FORGOT_PASSWORD,
-  RESET_PASSWORD,
-  CREATE,
-  UPDATE,
-  DELETE,
-  // Rental operations
-  BORROW_CREATED,
-  RETURN_SUCCESS,
-  DAMAGE_DETECTED,
-  ITEM_LOST,
-  OVERDUE_DETECTED,
-  PAYMENT_TRIGGERED
+    LOGIN,
+    LOGOUT,
+    SIGN_UP,
+    REFRESH_TOKEN,
+    CHANGE_PASSWORD,
+    FORGOT_PASSWORD,
+    RESET_PASSWORD,
+    CREATE,
+    UPDATE,
+    DELETE,
+    RESTORE,
+    // Rental operations
+    BORROW_CREATED,
+    RETURN_SUCCESS,
+    DAMAGE_DETECTED,
+    ITEM_LOST,
+    OVERDUE_DETECTED,
+    PAYMENT_TRIGGERED,
 }

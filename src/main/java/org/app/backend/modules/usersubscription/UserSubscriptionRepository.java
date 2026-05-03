@@ -9,16 +9,21 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserSubscriptionRepository extends JpaRepository<UserSubscription, UUID> {
-  boolean existsByUserIdAndSubscriptionId(UUID userId, UUID subscriptionId);
+public interface UserSubscriptionRepository
+    extends JpaRepository<UserSubscription, UUID>
+{
+    boolean existsByUserIdAndStatus(UUID userId, UserSubscriptionStatus status);
 
-  List<UserSubscription> findByUserId(UUID userId);
+    List<UserSubscription> findByUserId(UUID userId);
 
-  List<UserSubscription> findBySubscriptionId(UUID subscriptionId);
+    List<UserSubscription> findBySubscriptionId(UUID subscriptionId);
 
-  List<UserSubscription> findByStatus(UserSubscriptionStatus status);
+    List<UserSubscription> findByStatus(UserSubscriptionStatus status);
 
-  @Query(
-      "SELECT us FROM UserSubscription us WHERE us.user.id = :userId AND us.endDate > CURRENT_TIMESTAMP ORDER BY us.endDate DESC LIMIT 1")
-  Optional<UserSubscription> findActiveSubscriptionByUserId(@Param("userId") UUID userId);
+    @Query(
+        "SELECT us FROM UserSubscription us WHERE us.user.id = :userId AND us.endDate > CURRENT_TIMESTAMP ORDER BY us.endDate DESC LIMIT 1"
+    )
+    Optional<UserSubscription> findActiveSubscriptionByUserId(
+        @Param("userId") UUID userId
+    );
 }

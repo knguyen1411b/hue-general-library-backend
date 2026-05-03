@@ -14,6 +14,7 @@ public enum SubscriptionMessage {
   CREATE_SUCCESS("Tạo gói đăng ký thành công"),
   UPDATE_SUCCESS("Cập nhật gói đăng ký thành công"),
   DELETE_SUCCESS("Xóa gói đăng ký thành công"),
+  RESTORE_SUCCESS("Khôi phục gói đăng ký thành công"),
 
   KEY_EXISTS("Mã gói đăng ký đã tồn tại"),
   NAME_EXISTS("Tên gói đăng ký đã tồn tại"),

@@ -3,46 +3,49 @@ package org.app.backend.modules.usersubscription;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
+
+import org.app.backend.modules.usersubscription.dto.*;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 
 public interface UserSubscriptionService {
-  // CRUD operations
-  UserSubscription create(UserSubscription userSubscription);
 
-  UserSubscription getById(UUID id);
+  // CRUD
+  UserSubscriptionResponseDTO create(UserSubscriptionCreateDTO dto);
 
-  UserSubscription update(UUID id, UserSubscription userSubscription);
+  UserSubscriptionResponseDTO getById(UUID id);
+
+  UserSubscriptionResponseDTO update(UUID id, UserSubscriptionUpdateDTO dto);
 
   void delete(UUID id);
 
-  // Pageable methods
-  Page<UserSubscription> getAll(Pageable pageable);
+  // Pageable
+  Page<UserSubscriptionResponseDTO> getAll(Pageable pageable);
 
-  Page<UserSubscription> getAll(Pageable pageable, UserSubscriptionStatus status, UUID userId);
+  Page<UserSubscriptionResponseDTO> getAll(
+      Pageable pageable, UserSubscriptionStatus status, UUID userId);
 
-  // Business operations
-  UserSubscription activateSubscription(UUID userSubscriptionId);
+  // Business
+  UserSubscriptionResponseDTO activateSubscription(UUID userSubscriptionId);
 
-  UserSubscription expireSubscription(UUID userSubscriptionId);
+  UserSubscriptionResponseDTO expireSubscription(UUID userSubscriptionId);
 
-  UserSubscription cancelSubscription(UUID userSubscriptionId);
+  UserSubscriptionResponseDTO cancelSubscription(UUID userSubscriptionId);
 
-  UserSubscription renewSubscription(
+  UserSubscriptionResponseDTO renewSubscription(
       UUID userSubscriptionId, LocalDate newStartDate, LocalDate newEndDate);
 
-  // Query methods
-  List<UserSubscription> getByUserId(UUID userId);
+  // Query
+  List<UserSubscriptionResponseDTO> getByUserId(UUID userId);
 
-  List<UserSubscription> getBySubscriptionId(UUID subscriptionId);
+  List<UserSubscriptionResponseDTO> getBySubscriptionId(UUID subscriptionId);
 
-  List<UserSubscription> getByStatus(UserSubscriptionStatus status);
+  List<UserSubscriptionResponseDTO> getByStatus(UserSubscriptionStatus status);
 
-  List<UserSubscription> getActiveSubscriptionsByUser(UUID userId);
+  List<UserSubscriptionResponseDTO> getActiveSubscriptionsByUser(UUID userId);
 
-  // Validation methods
-
-  // Statistics
-
+  // Stats
   long countByStatus(UserSubscriptionStatus status);
+
+  List<UserSubscriptionResponseDTO> getAll();
 }
