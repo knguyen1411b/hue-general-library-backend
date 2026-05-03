@@ -20,7 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/subscriptions")
+@RequestMapping("/api/v1/subscriptions")
 @RequiredArgsConstructor
 public class SubscriptionV1Controller {
 
@@ -41,14 +41,6 @@ public class SubscriptionV1Controller {
     SubscriptionDTO subscription = subscriptionService.findById(id);
     return ResponseEntity.ok(
         DataApiResponse.success(subscription, "Lấy thông tin gói đăng ký thành công"));
-  }
-
-  @GetMapping("/key/{key}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN') or hasRole('USER')")
-  public ResponseEntity<DataApiResponse<SubscriptionDTO>> findByKey(@PathVariable String key) {
-    SubscriptionDTO subscription = subscriptionService.findByKey(key);
-    return ResponseEntity.ok(
-        DataApiResponse.success(subscription, "Lấy thông tin gói đăng ký theo key thành công"));
   }
 
   @PostMapping

@@ -28,6 +28,16 @@ public class BookItemDTO {
 
   UUID shelfPositionId;
 
+  String floorName;
+
+  String aisleName;
+
+  String shelfName;
+
+  Integer rowIndex;
+
+  Integer colIndex;
+
   Instant createdAt;
 
   Instant updatedAt;

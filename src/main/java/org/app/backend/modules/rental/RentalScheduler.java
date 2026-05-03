@@ -1,6 +1,6 @@
 package org.app.backend.modules.rental;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -35,7 +35,7 @@ public class RentalScheduler {
 
     // Tìm tất cả các phiếu đang mượn (BORROWING) nhưng hạn trả (dueDate) đã qua (nhỏ hơn Hiện tại)
     List<Rental> overdueRentals =
-        rentalRepository.findByStatusAndDueDateBefore(RentalStatus.BORROWING, Instant.now());
+        rentalRepository.findByStatusAndDueDateBefore(RentalStatus.BORROWING, LocalDate.now());
 
     if (overdueRentals.isEmpty()) {
       log.info("[CRON JOB] Không có phiếu mượn nào quá hạn hôm nay.");
@@ -57,7 +57,7 @@ public class RentalScheduler {
           Fine.builder()
               .rental(rental)
               .amount(5000)
-              .reason("Phạt trễ hạn sách: " + rental.getBookItem().getBook().getTitle())
+              .reason("Phạt trễ hạn sách: " + rental.getBookItemId())
               .status(FineStatus.UNPAID)
               .build();
       newFines.add(fine);

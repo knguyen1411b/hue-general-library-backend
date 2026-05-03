@@ -16,9 +16,10 @@ public interface UserSubscriptionService {
 
   void delete(UUID id);
 
+  // Pageable methods
   Page<UserSubscription> getAll(Pageable pageable);
 
-  List<UserSubscription> getAll();
+  Page<UserSubscription> getAll(Pageable pageable, UserSubscriptionStatus status, UUID userId);
 
   // Business operations
   UserSubscription activateSubscription(UUID userSubscriptionId);
@@ -39,27 +40,9 @@ public interface UserSubscriptionService {
 
   List<UserSubscription> getActiveSubscriptionsByUser(UUID userId);
 
-  List<UserSubscription> getExpiredSubscriptions();
-
-  List<UserSubscription> getCanceledSubscriptions();
-
   // Validation methods
-  boolean canUserSubscribe(UUID userId, UUID subscriptionId);
-
-  boolean isSubscriptionActive(UUID userSubscriptionId);
-
-  boolean isSubscriptionExpired(UUID userSubscriptionId);
-
-  boolean isSubscriptionCanceled(UUID userSubscriptionId);
 
   // Statistics
-  long countActiveSubscriptions();
-
-  long countExpiredSubscriptions();
-
-  long countCanceledSubscriptions();
-
-  long countByUser(UUID userId);
 
   long countByStatus(UserSubscriptionStatus status);
 }

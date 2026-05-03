@@ -1,30 +1,26 @@
 package org.app.backend.modules.rental;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import org.app.backend.modules.rental.enums.RentalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.app.backend.modules.fine.enums.FineStatus;
+import org.app.backend.modules.rental.enums.RentalStatus;
 
-@Repository
 public interface RentalRepository extends JpaRepository<Rental, UUID> {
+  List<Rental> findByUserId(UUID userId);
 
-  // Đếm số lượng sách user ĐANG MƯỢN (phục vụ luồng check giới hạn gói cước)
-  int countByUser_IdAndStatus(UUID userId, RentalStatus status);
+  Page<Rental> findByUserId(UUID userId, Pageable pageable);
 
-  // Tìm giao dịch đang mượn dựa vào mã vạch của cuốn sách (phục vụ luồng trả sách)
-  Optional<Rental> findByBookItem_BarcodeAndStatus(String barcode, RentalStatus status);
+  List<Rental> findByStatus(RentalStatus status);
 
-  // Độc giả: Xem lịch sử mượn của chính mình
-  Page<Rental> findByUser_IdOrderByDueDateDesc(UUID userId, Pageable pageable);
+  Page<Rental> findByStatus(RentalStatus status, Pageable pageable);
 
-  // Thủ thư: Xem toàn bộ phiếu mượn (có thể kết hợp filter sau này)
-  Page<Rental> findAll(Pageable pageable);
+  List<Rental> findByBookItemId(UUID bookItemId);
 
-  // Cron Job: Tìm các phiếu mượn ĐANG MƯỢN nhưng HẠN TRẢ < HIỆN TẠI
-  List<Rental> findByStatusAndDueDateBefore(RentalStatus status, Instant time);
+  Page<Rental> findByBookItemId(UUID bookItemId, Pageable pageable);
+
+  List<Rental> findByStatusAndDueDateBefore(RentalStatus status, LocalDate time);
 }

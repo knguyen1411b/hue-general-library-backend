@@ -1,84 +1,195 @@
 package org.app.backend.modules.rental;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.app.backend.common.dto.ApiResponse;
+import org.app.backend.common.dto.DataApiResponse;
+import org.app.backend.common.dto.PagedApiResponse;
+import org.app.backend.common.swagger.*;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.rental.dto.RentalCreateDTO;
-import org.app.backend.modules.rental.dto.RentalPreviewDTO;
-import org.app.backend.modules.rental.dto.RentalRenewDTO;
-import org.app.backend.modules.rental.dto.RentalResponseDTO;
-import org.app.backend.modules.rental.dto.RentalReturnDTO;
-import org.springframework.data.domain.Page;
+import org.app.backend.modules.rental.dto.RentalDTO;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.app.backend.modules.rental.enums.RentalStatus;
 
 @RestController
 @RequestMapping("/api/v1/rentals")
 @RequiredArgsConstructor
-@Tag(name = "Rental Management", description = "Quản lý luồng mượn, trả và gia hạn sách")
+@Tag(name = "Phiếu mượn sách (V1)", description = "Quản lý phiếu mượn sách")
 public class RentalV1Controller {
-
   private final RentalService rentalService;
 
-  @Operation(summary = "Cho mượn sách", description = "Độc giả hoặc Thủ thư cho độc giả mượn sách")
-  @PostMapping("/borrow")
-  @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("hasAnyRole('USER','LIBRARIAN')")
-  public ApiResponse rentBooks(
+  @Operation(
+      summary = "Lấy danh sách phiếu mượn có phân trang",
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = PagedApiResponseRentalDTO.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @GetMapping
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public PagedApiResponse<RentalDTO> index(
+      @RequestParam(required = false) UUID userId,
+      @RequestParam(required = false) RentalStatus status,
+      @RequestParam(required = false) UUID bookItemId,
+      @ParameterObject Pageable pageable) {
+    return PagedApiResponse.success(
+        rentalService.findAll(pageable, userId, status, bookItemId),
+        "Lấy danh sách phiếu mượn thành công");
+  }
+
+  @Operation(
+      summary = "Xem chi tiết phiếu mượn",
+      parameters = @Parameter(name = "id", required = true),
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseRentalDTO.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
+  @GetMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public DataApiResponse<RentalDTO> show(@PathVariable UUID id) {
+    return DataApiResponse.success(
+        rentalService.findById(id), "Lấy chi tiết phiếu mượn thành công");
+  }
+
+  @Operation(
+      summary = "Tạo phiếu mượn mới",
+      requestBody =
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              required = true,
+              content =
+                  @Content(
+                      mediaType = MediaType.APPLICATION_JSON_VALUE,
+                      schema = @Schema(implementation = RentalCreateDTO.class))),
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "201",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @BadRequestApiResponse
+  @PostMapping
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public ApiResponse create(
       @Valid @RequestBody RentalCreateDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
-    rentalService.rentBooks(dto, actor);
-    return ApiResponse.created(RentalMessage.BORROW_SUCCESS.getMessage());
+    rentalService.create(dto, actor);
+    return ApiResponse.created("Tạo phiếu mượn thành công");
   }
 
   @Operation(
-      summary = "Xem trước thông tin trả sách",
-      description = "Quét mã vạch để xem thông tin mượn trước khi xác nhận trả sách")
-  @GetMapping("/return/preview/{barcode}")
-  @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('LIBRARIAN')")
-  public RentalPreviewDTO getReturnPreview(@PathVariable String barcode) {
-    return rentalService.getReturnPreview(barcode);
+      summary = "Xác nhận trả sách",
+      parameters = @Parameter(name = "id", required = true),
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseRentalDTO.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
+  @PutMapping("/{id}/return")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public DataApiResponse<RentalDTO> returnBook(
+      @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(
+        rentalService.returnBook(id, actor), "Xác nhận trả sách thành công");
   }
 
   @Operation(
-      summary = "Trả sách",
-      description = "Thủ thư xác nhận trả sách từ độc giả tại thư viện")
-  @PostMapping("/return")
-  @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('LIBRARIAN')")
-  public ApiResponse returnBooks(
-      @Valid @RequestBody RentalReturnDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
-    rentalService.returnBooks(dto, actor);
-    return ApiResponse.success(RentalMessage.RETURN_SUCCESS.getMessage());
+      summary = "Gia hạn sách",
+      parameters = @Parameter(name = "id", required = true),
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseRentalDTO.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
+  @PostMapping("/{id}/renew-book")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public DataApiResponse<RentalDTO> renewBook(
+      @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(rentalService.renewBook(id, actor), "Gia hạn sách thành công");
   }
 
-  @Operation(summary = "Gia hạn sách", description = "Thủ thư gia hạn sách cho độc giả")
-  @PostMapping("/renew")
-  @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('LIBRARIAN')")
-  public ApiResponse renewBook(
-      @Valid @RequestBody RentalRenewDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
-    rentalService.renewBook(dto, actor);
-    return ApiResponse.success(RentalMessage.RENEW_SUCCESS.getMessage());
+  @Operation(
+      summary = "Báo mất sách",
+      parameters = @Parameter(name = "id", required = true),
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseRentalDTO.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
+  @PostMapping("/{id}/report-lost")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public DataApiResponse<RentalDTO> reportLost(
+      @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(rentalService.reportLost(id, actor), "Báo mất sách thành công");
   }
 
-  @Operation(summary = "Xem lịch sử mượn sách của bản thân (Độc giả)")
-  @GetMapping("/my-history")
-  public Page<RentalResponseDTO> getMyHistory(
-      @AuthenticationPrincipal CustomUserDetails actor, Pageable pageable) {
-    return rentalService.getMyRentals(actor.getId(), pageable);
+  @Operation(
+      summary = "Xóa phiếu mượn",
+      parameters = @Parameter(name = "id", required = true),
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiResponse.class)))
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
+  @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ApiResponse delete(
+      @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
+    rentalService.delete(id, actor);
+    return ApiResponse.success("Xóa phiếu mượn thành công");
   }
 
-  @Operation(summary = "Xem toàn bộ lịch sử mượn trả hệ thống (Thủ thư)")
-  @GetMapping("/all")
-  @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
-  public Page<RentalResponseDTO> getAllRentals(Pageable pageable) {
-    return rentalService.getAllRentals(pageable);
-  }
+  public static class PagedApiResponseRentalDTO extends PagedApiResponse<RentalDTO> {}
+
+  public static class DataApiResponseRentalDTO extends DataApiResponse<RentalDTO> {}
 }

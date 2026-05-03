@@ -29,5 +29,20 @@ public class BookItemCreateDTO {
   LocalDate importDate;
 
   @Schema(description = "ID vị trí kệ (tùy chọn)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
-  UUID shelfPositionId;
+  UUID shelfPositionId; // Cho phép null khi tạo mới
+
+  @Schema(description = "Thông tin tầng", example = "Tầng 1")
+  String floorName; // Optional, derived from shelfPosition if not provided
+
+  @Schema(description = "Thông tin dãy", example = "Dãy A")
+  String aisleName; // Optional, derived from shelfPosition if not provided
+
+  @Schema(description = "Thông tin Kệ", example = "Kệ 2")
+  String shelfName; // Optional, derived from shelfPosition if not provided
+
+  @Schema(description = "Vị trí hàng", example = "1")
+  Integer rowIndex; // Optional, derived from shelfPosition if not provided
+
+  @Schema(description = "Vị trí cột", example = "3")
+  Integer colIndex; // Optional, derived from shelfPosition if not provided
 }

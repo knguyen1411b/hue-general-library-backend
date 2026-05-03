@@ -1,11 +1,15 @@
 package org.app.backend.modules.fine;
 
 import jakarta.persistence.*;
+
+import java.time.Instant;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.fine.enums.FineStatus;
 import org.app.backend.modules.rental.Rental;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
@@ -36,4 +40,12 @@ public class Fine {
   @Column(nullable = false)
   @Builder.Default
   FineStatus status = FineStatus.UNPAID;
+
+  @CreationTimestamp
+  @Column(name = "created_at", updatable = false, nullable = false)
+  Instant createdAt;
+
+  @UpdateTimestamp
+  @Column(name = "updated_at", nullable = false)
+  Instant updatedAt;
 }

@@ -23,7 +23,9 @@ public enum UserMessage {
   PHONE_TAKEN("Số điện thoại đã được sử dụng"),
   IDENTITY_NUMBER_TAKEN("Số CCCD/CMND đã được sử dụng"),
 
-  NOT_FOUND("Không tìm thấy người dùng");
+  NOT_FOUND("Không tìm thấy người dùng"),
+  REPORT_LOST_CARD_SUCCESS("Báo mất thẻ thư viện thành công"),
+  LIBRARY_CARD_NOT_FOUND("Không tìm thấy thẻ thư viện");
 
   String message;
 }

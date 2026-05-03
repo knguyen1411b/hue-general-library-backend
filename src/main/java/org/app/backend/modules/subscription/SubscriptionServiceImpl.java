@@ -49,17 +49,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   @Override
-  @Transactional(readOnly = true)
-  public SubscriptionDTO findByKey(String key) {
-    return subscriptionRepository
-        .findByKey(key)
-        .map(sub -> modelMapper.map(sub, SubscriptionDTO.class))
-        .orElseThrow(
-            () ->
-                new AppException(HttpStatus.NOT_FOUND, SubscriptionMessage.NOT_FOUND.getMessage()));
-  }
-
-  @Override
   @Transactional
   public void create(SubscriptionCreateDTO dto, CustomUserDetails actor) {
     String normalizedKey = dto.getKey().toUpperCase();

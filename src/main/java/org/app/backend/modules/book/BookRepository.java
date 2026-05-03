@@ -4,6 +4,8 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -21,4 +23,19 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
 
   // 4. Tìm kiếm sách theo ID và chưa bị xóa mềm
   Optional<Book> findByIdAndStatusNot(UUID id, BookStatus status);
+
+  Integer findCountByIdAndStatus(UUID id, BookStatus status);
+
+  @Modifying
+  @Query("UPDATE Book b SET b.count = :count WHERE b.id = :id")
+  int updateCountById(UUID id, Integer count);
+
+  @Modifying
+  @Query("UPDATE Book b SET b.count = b.count - 1 WHERE b.id = :id AND b.count > 0")
+  int decreaseCount(UUID id);
+
+  @Modifying
+  @Query("UPDATE Book b SET b.count = b.count + 1 WHERE b.id = :id")
+  int increaseCount(UUID id);
+
 }

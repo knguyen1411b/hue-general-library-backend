@@ -2,14 +2,15 @@ package org.app.backend.modules.rental;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.bookItem.BookItem;
-import org.app.backend.modules.rental.enums.RentalStatus;
-import org.app.backend.modules.user.User;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
+import org.app.backend.modules.rental.enums.RentalStatus;
+
 
 @Entity
 @Table(name = "tbl_rental")
@@ -25,25 +26,29 @@ public class Rental {
   @UuidGenerator(style = UuidGenerator.Style.TIME)
   UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  User user;
+  @Column(nullable = false)
+  UUID userId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "book_item_id", nullable = false)
-  BookItem bookItem;
+  @Column(nullable = false)
+  UUID bookItemId;
 
-  @CreationTimestamp
-  @Column(name = "rent_date", updatable = false, nullable = false)
-  Instant rentDate;
+  @Column(nullable = false)
+  LocalDate rentDate;
 
-  @Column(name = "due_date", nullable = false)
-  Instant dueDate;
+  @Column(nullable = false)
+  LocalDate dueDate;
 
-  @Column(name = "return_date")
-  Instant returnDate;
+  LocalDate returnDate;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   RentalStatus status;
+
+  @CreationTimestamp
+  @Column(name = "created_at", updatable = false, nullable = false)
+  Instant createdAt;
+
+  @UpdateTimestamp
+  @Column(name = "updated_at", nullable = false)
+  Instant updatedAt;
 }

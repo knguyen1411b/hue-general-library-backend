@@ -22,5 +22,15 @@ public class BookItemUpdateDTO {
 
   UUID shelfPositionId;
 
+  String floorName;
+
+  String aisleName;
+
+  String shelfName;
+
+  Integer rowIndex;
+
+  Integer colIndex;
+
   BookItemStatus status;
 }

@@ -10,6 +10,9 @@ import org.app.backend.core.file.FileService;
 import org.app.backend.modules.audit.AuditLogService;
 import org.app.backend.modules.audit.enums.*;
 import org.app.backend.modules.auth.security.CustomUserDetails;
+import org.app.backend.modules.librarycard.CardStatus;
+import org.app.backend.modules.librarycard.LibraryCard;
+import org.app.backend.modules.librarycard.LibraryCardRepository;
 import org.app.backend.modules.user.dto.*;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
@@ -36,6 +39,8 @@ public class UserServiceImpl implements UserService {
   FileService fileService;
   ModelMapper modelMapper;
   AuditLogService auditLogService;
+  LibraryCardRepository libraryCardRepository;
+  org.app.backend.modules.librarycardrequest.LibraryCardRequestRepository requestRepository;
 
   @Override
   @Transactional(readOnly = true)
@@ -215,6 +220,33 @@ public class UserServiceImpl implements UserService {
         user.getId().toString(),
         AuditLogStatus.SUCCESS,
         "Cập nhật người dùng thành công: " + user.getUsername());
+  }
+
+  @Override
+  @Transactional
+  public void reportLostCard(CustomUserDetails user) {
+    User u =
+        userRepository
+            .findById(user.getId())
+            .orElseThrow(
+                () -> new AppException(HttpStatus.NOT_FOUND, UserMessage.NOT_FOUND.getMessage()));
+    // Get user's active library card and set status to LOST
+    List<LibraryCard> cards =
+        libraryCardRepository.findByUserIdAndStatus(u.getId(), CardStatus.ACTIVE);
+    if (cards.isEmpty()) {
+      throw new AppException(HttpStatus.NOT_FOUND, UserMessage.LIBRARY_CARD_NOT_FOUND.getMessage());
+    }
+    LibraryCard libraryCard = cards.get(0);
+    libraryCard.setStatus(CardStatus.LOST);
+    libraryCardRepository.save(libraryCard);
+    auditLogService.log(
+        user.getId(),
+        user.getUsername(),
+        AuditLogAction.UPDATE,
+        AuditLogEntity.USER,
+        u.getId().toString(),
+        AuditLogStatus.SUCCESS,
+        "Báo mất thẻ thư viện thành công");
   }
 
   @Override

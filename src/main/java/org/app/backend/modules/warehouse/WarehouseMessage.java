@@ -1,19 +1,9 @@
 package org.app.backend.modules.warehouse;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.experimental.FieldDefaults;
-
-@Getter
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public enum WarehouseMessage {
-  INDEX_SUCCESS("Lấy danh sách kệ thành công"),
-  CREATE_SUCCESS("Tạo kệ thành công"),
-  DELETE_SUCCESS("Xóa kệ thành công"),
-  ALREADY_EXIST("Kệ đã tồn tại"),
-  CANNOT_DELETE("Không thể xóa kệ vì còn sách bên trong");
-
-  String message;
+public class WarehouseMessage {
+  public static final String FLOOR_NOT_FOUND = "Floor not found";
+  public static final String AISLE_NOT_FOUND = "Aisle not found";
+  public static final String INDEX_SUCCESS = "Lấy cấu trúc kho hàng thành công";
+  public static final String CREATE_SUCCESS = "Thêm kệ mới thành công";
+  public static final String DELETE_SUCCESS = "Xóa kệ thành công";
 }

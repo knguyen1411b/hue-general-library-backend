@@ -11,12 +11,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FineRepository extends JpaRepository<Fine, UUID> {
 
-  // 1. Phục vụ luồng Rental (Mượn/Gia hạn sách): Kiểm tra xem user có đang nợ tiền không
-  boolean existsByRental_User_IdAndStatus(UUID userId, FineStatus status);
+  List<Fine> findByRentalId(UUID rentalId);
 
-  // 2. Phục vụ luồng Fine (Dành cho độc giả): Xem danh sách các khoản nợ của chính mình
-  List<Fine> findByRental_User_IdAndStatusOrderByAmountDesc(UUID userId, FineStatus status);
+  Page<Fine> findByRentalId(UUID rentalId, Pageable pageable);
 
-  // 3. Phục vụ luồng Fine (Dành cho thủ thư): Lấy danh sách tất cả các phiếu phạt trên hệ thống
+  List<Fine> findByStatus(FineStatus status);
+
   Page<Fine> findByStatus(FineStatus status, Pageable pageable);
+
+  // tạo hàm existsByRental_User_IdAndStatus để kiểm tra xem có tồn tại phạt nào chưa thanh toán của người dùng hay không
+  boolean existsByRental_UserIdAndStatus(UUID userId, FineStatus status);
 }

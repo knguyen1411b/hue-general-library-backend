@@ -1,78 +1,114 @@
 package org.app.backend.modules.warehouse;
 
+import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import org.app.backend.common.exception.AppException;
 import org.app.backend.modules.warehouse.dto.AddShelfDTO;
-import org.app.backend.modules.warehouse.entity.*;
-import org.app.backend.modules.warehouse.repository.*;
+import org.app.backend.modules.warehouse.entity.Aisle;
+import org.app.backend.modules.warehouse.entity.Floor;
+import org.app.backend.modules.warehouse.entity.Shelf;
+import org.app.backend.modules.warehouse.exception.AisleNotFoundException;
+import org.app.backend.modules.warehouse.exception.FloorNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class WarehouseServiceImpl implements WarehouseService {
+  private final org.app.backend.modules.warehouse.repository.FloorRepository floorRepository;
+  private final org.app.backend.modules.warehouse.repository.AisleRepository aisleRepository;
+  private final org.app.backend.modules.warehouse.repository.ShelfRepository shelfRepository;
 
-  FloorRepository floorRepo;
-  AisleRepository aisleRepo;
-  ShelfRepository shelfRepo;
-  PositionRepository positionRepo;
+  public WarehouseServiceImpl(
+      org.app.backend.modules.warehouse.repository.FloorRepository floorRepository,
+      org.app.backend.modules.warehouse.repository.AisleRepository aisleRepository,
+      org.app.backend.modules.warehouse.repository.ShelfRepository shelfRepository) {
+    this.floorRepository = floorRepository;
+    this.aisleRepository = aisleRepository;
+    this.shelfRepository = shelfRepository;
+  }
+
+  // Floor methods
+  @Override
+  public Floor createFloor(Floor floor) {
+    return floorRepository.save(floor);
+  }
 
   @Override
-  @Transactional(readOnly = true)
+  public Floor getFloorById(UUID id) {
+    return floorRepository
+        .findById(id)
+        .orElseThrow(() -> new FloorNotFoundException(WarehouseMessage.FLOOR_NOT_FOUND));
+  }
+
+  @Override
+  public Floor updateFloor(UUID id, Floor floor) {
+    Floor existing = getFloorById(id);
+    existing.setName(floor.getName());
+    return floorRepository.save(existing);
+  }
+
+  @Override
+  public void deleteFloor(UUID id) {
+    Floor existing = getFloorById(id);
+    floorRepository.delete(existing);
+  }
+
+  @Override
+  public List<Floor> getAllFloors() {
+    return floorRepository.findAll();
+  }
+
+  // Aisle methods
+  @Override
+  public Aisle createAisle(Aisle aisle) {
+    return aisleRepository.save(aisle);
+  }
+
+  @Override
+  public Aisle getAisleById(UUID id) {
+    return aisleRepository
+        .findById(id)
+        .orElseThrow(() -> new AisleNotFoundException(WarehouseMessage.AISLE_NOT_FOUND));
+  }
+
+  @Override
+  public Aisle updateAisle(UUID id, Aisle aisle) {
+    Aisle existing = getAisleById(id);
+    existing.setName(aisle.getName());
+    return aisleRepository.save(existing);
+  }
+
+  @Override
+  public void deleteAisle(UUID id) {
+    Aisle existing = getAisleById(id);
+    aisleRepository.delete(existing);
+  }
+
+  @Override
+  public List<Aisle> getAllAisles() {
+    return aisleRepository.findAll();
+  }
+
+  // Shelf methods (existing)
+  @Override
   public Page<Floor> getWarehouseTree(Pageable pageable) {
-    return floorRepo.findAll(pageable);
+    return floorRepository.findAll(pageable);
   }
 
   @Override
-  @Transactional
   public Shelf createShelf(AddShelfDTO dto) {
-    Aisle aisle =
-        aisleRepo
-            .findById(dto.getAisleId())
-            .orElseThrow(
-                () ->
-                    new AppException(
-                        HttpStatus.BAD_REQUEST, WarehouseMessage.ALREADY_EXIST.getMessage()));
-
-    Shelf shelf =
-        Shelf.builder()
-            .name(dto.getName())
-            .maxRow(dto.getMaxRow())
-            .maxCol(dto.getMaxCol())
-            .aisle(aisle)
-            .build();
-
-    Shelf savedShelf = shelfRepo.save(shelf);
-
-    for (int r = 1; r <= dto.getMaxRow(); r++) {
-      for (int c = 1; c <= dto.getMaxCol(); c++) {
-        Position pos = new Position();
-        pos.setRowIndex(r);
-        pos.setColIndex(c);
-        pos.setShelf(savedShelf);
-        pos.setBookCount(0);
-        positionRepo.save(pos);
-      }
-    }
-    return savedShelf;
+    Aisle aisle = getAisleById(dto.getAisleId());
+    Shelf shelf = new Shelf();
+    shelf.setAisle(aisle);
+    shelf.setMaxCol(dto.getMaxCol());
+    shelf.setMaxRow(dto.getMaxRow());
+    return shelfRepository.save(shelf);
   }
 
-  @Transactional
+  @Override
   public void deleteShelf(UUID id) {
-    Shelf shelf = shelfRepo.findById(id).orElseThrow();
-
-    boolean hasBooks = shelf.getPositions().stream().anyMatch(p -> p.getBookCount() > 0);
-
-    if (hasBooks) {
-      throw new AppException(HttpStatus.BAD_REQUEST, WarehouseMessage.CANNOT_DELETE.getMessage());
-    }
-
-    shelfRepo.delete(shelf);
+    shelfRepository.deleteById(id);
   }
 }

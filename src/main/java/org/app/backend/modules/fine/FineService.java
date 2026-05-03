@@ -1,21 +1,22 @@
 package org.app.backend.modules.fine;
 
-import java.util.List;
 import java.util.UUID;
 import org.app.backend.modules.auth.security.CustomUserDetails;
-import org.app.backend.modules.fine.dto.FineResponseDTO;
-import org.app.backend.modules.fine.enums.FineStatus;
+import org.app.backend.modules.fine.dto.FineCreateDTO;
+import org.app.backend.modules.fine.dto.FineDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.app.backend.modules.fine.enums.FineStatus;
+
 
 public interface FineService {
-  // Xem nợ
-  List<FineResponseDTO> getFinesByUserId(UUID userId, FineStatus status);
+  Page<FineDTO> findAll(Pageable pageable, UUID rentalId, FineStatus status);
 
-  Page<FineResponseDTO> getAllFines(FineStatus status, Pageable pageable);
+  FineDTO findById(UUID id);
 
-  // Xử lý thanh toán/hủy
-  void processPayment(UUID fineId, CustomUserDetails actor);
+  FineDTO create(FineCreateDTO dto, CustomUserDetails actor);
 
-  void cancelFine(UUID fineId, String reason, CustomUserDetails actor);
+  FineDTO pay(UUID id, CustomUserDetails actor);
+
+  void delete(UUID id, CustomUserDetails actor);
 }
