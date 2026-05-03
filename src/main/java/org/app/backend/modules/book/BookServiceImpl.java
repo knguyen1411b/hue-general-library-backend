@@ -10,7 +10,8 @@ import org.app.backend.modules.audit.AuditLogService;
 import org.app.backend.modules.audit.enums.*;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.dto.*;
-import org.app.backend.modules.book.filter.BookFilterDTO;
+import org.app.backend.modules.book.dto.BookFilterDTO;
+import org.app.backend.modules.book.enums.BookStatus;
 import org.app.backend.modules.category.Category;
 import org.app.backend.modules.category.CategoryRepository;
 import org.jspecify.annotations.NonNull;
@@ -47,7 +48,8 @@ public class BookServiceImpl implements BookService {
         .findById(id)
         .filter(b -> b.getStatus() != BookStatus.DELETED)
         .map(book -> modelMapper.map(book, BookDTO.class))
-        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy đầu sách"));
+        .orElseThrow(
+            () -> new AppException(HttpStatus.NOT_FOUND, BookMessage.NOT_FOUND.getMessage()));
   }
 
   @Override
@@ -61,14 +63,11 @@ public class BookServiceImpl implements BookService {
             .findById(dto.getCategoryId())
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
 
-    // Configure ModelMapper to skip id for CREATE flow (prevent
-    // ObjectOptimisticLockingFailureException)
     modelMapper
         .typeMap(BookCreateDTO.class, Book.class)
         .addMappings(mapper -> mapper.skip(Book::setId));
 
     Book book = modelMapper.map(dto, Book.class);
-    // Ensure id is null for INSERT (not UPDATE)
     book.setId(null);
     book.setCategory(category);
     book.setStatus(BookStatus.ACTIVE);

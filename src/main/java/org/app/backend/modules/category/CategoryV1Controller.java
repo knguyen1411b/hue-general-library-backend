@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
-@Tag(name = "Danh mục sách (V1)", description = "Các API dùng để quản lý danh mục sách")
+@Tag(name = "Danh mục sách (V1)")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryV1Controller {
 

@@ -15,7 +15,6 @@ public enum UserMessage {
   UPDATE_SUCCESS("Cập nhật người dùng thành công"),
   DELETE_SUCCESS("Xóa người dùng thành công"),
 
-  USERNAME_EXISTS("Tên đăng nhập đã tồn tại"),
   GET_ME_SUCCESS("Lấy thông tin người dùng hiện tại thành công"),
   UPDATE_ME_SUCCESS("Cập nhật thông tin người dùng hiện tại thành công"),
   USERNAME_TAKEN("Tên đăng nhập đã được sử dụng"),

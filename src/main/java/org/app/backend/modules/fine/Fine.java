@@ -1,7 +1,6 @@
 package org.app.backend.modules.fine;
 
 import jakarta.persistence.*;
-
 import java.time.Instant;
 import java.util.UUID;
 import lombok.*;

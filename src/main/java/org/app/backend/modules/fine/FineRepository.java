@@ -19,6 +19,7 @@ public interface FineRepository extends JpaRepository<Fine, UUID> {
 
   Page<Fine> findByStatus(FineStatus status, Pageable pageable);
 
-  // tạo hàm existsByRental_User_IdAndStatus để kiểm tra xem có tồn tại phạt nào chưa thanh toán của người dùng hay không
+  // tạo hàm existsByRental_User_IdAndStatus để kiểm tra xem có tồn tại phạt nào chưa thanh toán của
+  // người dùng hay không
   boolean existsByRental_UserIdAndStatus(UUID userId, FineStatus status);
 }

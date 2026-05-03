@@ -19,7 +19,7 @@ import org.app.backend.common.swagger.NotFoundApiResponse;
 import org.app.backend.common.swagger.UnauthorizedApiResponse;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.dto.*;
-import org.app.backend.modules.book.filter.BookFilterDTO;
+import org.app.backend.modules.book.dto.BookFilterDTO;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/books")
 @RequiredArgsConstructor
-@Tag(name = "Book Management", description = "Quản lý đầu sách")
+@Tag(name = "Quản lý đầu sách (V1)")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookV1Controller {
   BookService bookService;

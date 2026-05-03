@@ -5,8 +5,8 @@ public enum BookItemStatus {
   BORROWED,
   LOST,
   DAMAGED,
-  MAINTENANCE, // Đang bảo trì/sửa chữa
-  DISCARDED, // Thanh lý hoặc loại bỏ
+  MAINTENANCE,
+  DISCARDED,
   PENDING,
   INACTIVE,
   DELETED

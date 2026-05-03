@@ -9,5 +9,6 @@ public enum AuditLogEntity {
   BOOK,
   BOOK_ITEM,
   RENTAL,
-  FINE
+  FINE,
+  WAREHOUSE
 }

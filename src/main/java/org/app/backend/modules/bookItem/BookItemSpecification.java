@@ -13,7 +13,7 @@ public class BookItemSpecification {
   public Specification<BookItem> filter(BookItemFilterDTO f) {
     return (root, query, cb) -> {
       List<Predicate> predicates = new ArrayList<>();
-      // Luôn ẩn các item đã xóa
+
       predicates.add(cb.notEqual(root.get("status"), BookItemStatus.DELETED));
 
       if (f.getBarcode() != null && !f.getBarcode().isBlank()) {

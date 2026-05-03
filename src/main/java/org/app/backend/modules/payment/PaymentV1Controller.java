@@ -7,7 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
 import org.app.backend.common.dto.PagedApiResponse;
@@ -25,9 +27,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "Giao dịch thanh toán (V1)", description = "Quản lý giao dịch thanh toán")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Tag(name = "Giao dịch thanh toán (V1)")
 public class PaymentV1Controller {
-  private final PaymentService paymentService;
+  PaymentService paymentService;
 
   @Operation(
       summary = "Lấy danh sách giao dịch có phân trang",

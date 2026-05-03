@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.book.BookStatus;
+import org.app.backend.modules.book.enums.BookStatus;
 
 @Data
 @Builder

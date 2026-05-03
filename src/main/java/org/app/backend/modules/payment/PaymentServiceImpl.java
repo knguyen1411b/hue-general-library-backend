@@ -1,6 +1,9 @@
 package org.app.backend.modules.payment;
 
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.payment.dto.PaymentCreateDTO;
 import org.app.backend.modules.payment.dto.PaymentDTO;
@@ -11,18 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentServiceImpl implements PaymentService {
 
-  private final PaymentRepository paymentRepository;
-  private final ModelMapper modelMapper;
-
-  public PaymentServiceImpl(PaymentRepository paymentRepository, ModelMapper modelMapper) {
-    this.paymentRepository = paymentRepository;
-    this.modelMapper = modelMapper;
-  }
+  PaymentRepository paymentRepository;
+  ModelMapper modelMapper;
 
   @Override
+  @Transactional(readOnly = true)
   public Page<PaymentDTO> findAll(
       Pageable pageable, UUID userId, PaymentType paymentType, PaymentStatus paymentStatus) {
     if (userId != null) {
@@ -44,6 +44,7 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PaymentDTO findById(UUID id) {
     Payment payment =
         paymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
@@ -51,6 +52,7 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   @Override
+  @Transactional
   public PaymentDTO create(PaymentCreateDTO dto, CustomUserDetails actor) {
     Payment payment = modelMapper.map(dto, Payment.class);
     payment.setPaymentStatus(PaymentStatus.PENDING);
@@ -59,6 +61,7 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   @Override
+  @Transactional
   public PaymentDTO confirm(UUID id, CustomUserDetails actor) {
     Payment payment =
         paymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
@@ -68,6 +71,7 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   @Override
+  @Transactional
   public void delete(UUID id, CustomUserDetails actor) {
     Payment payment =
         paymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));

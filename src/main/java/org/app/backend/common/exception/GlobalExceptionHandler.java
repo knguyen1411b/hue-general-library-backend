@@ -7,11 +7,6 @@ import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.BadRequestApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
 import org.app.backend.common.swagger.InternalServerErrorApiResponse;
-import org.app.backend.modules.usersubscription.exception.SubscriptionNotFoundException;
-import org.app.backend.modules.usersubscription.exception.UserNotFoundException;
-import org.app.backend.modules.usersubscription.exception.UserSubscriptionAlreadyExistsException;
-import org.app.backend.modules.usersubscription.exception.UserSubscriptionNotFoundException;
-import org.app.backend.modules.usersubscription.exception.UserSubscriptionValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -40,55 +35,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse> handleAppException(AppException ex) {
     log.warn("[LOG] Business exception: {}", ex.getMessage());
     return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.from(ex));
-  }
-
-  @ExceptionHandler(UserSubscriptionNotFoundException.class)
-  public ResponseEntity<ApiResponse> handleUserSubscriptionNotFoundException(
-      UserSubscriptionNotFoundException ex) {
-    log.warn("[LOG] User subscription not found: {}", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-        .body(ApiResponse.notFoundResource(ex.getMessage()));
-  }
-
-  @ExceptionHandler(UserSubscriptionAlreadyExistsException.class)
-  public ResponseEntity<ApiResponse> handleUserSubscriptionAlreadyExistsException(
-      UserSubscriptionAlreadyExistsException ex) {
-    log.warn("[LOG] User subscription already exists: {}", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.CONFLICT)
-        .body(
-            ApiResponse.apiBuilder()
-                .success(false)
-                .statusCode(HttpStatus.CONFLICT.value())
-                .message(ex.getMessage())
-                .build());
-  }
-
-  @ExceptionHandler(UserSubscriptionValidationException.class)
-  public ResponseEntity<ApiResponse> handleUserSubscriptionValidationException(
-      UserSubscriptionValidationException ex) {
-    log.warn("[LOG] User subscription validation error: {}", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(
-            ApiResponse.apiBuilder()
-                .success(false)
-                .statusCode(HttpStatus.BAD_REQUEST.value())
-                .message(ex.getMessage())
-                .build());
-  }
-
-  @ExceptionHandler(SubscriptionNotFoundException.class)
-  public ResponseEntity<ApiResponse> handleSubscriptionNotFoundException(
-      SubscriptionNotFoundException ex) {
-    log.warn("[LOG] Subscription not found: {}", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-        .body(ApiResponse.notFoundResource(ex.getMessage()));
-  }
-
-  @ExceptionHandler(UserNotFoundException.class)
-  public ResponseEntity<ApiResponse> handleUserNotFoundException(UserNotFoundException ex) {
-    log.warn("[LOG] User not found: {}", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-        .body(ApiResponse.notFoundResource(ex.getMessage()));
   }
 
   /**

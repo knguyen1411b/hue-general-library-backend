@@ -1,20 +1,22 @@
 package org.app.backend.modules.warehouse.dto;
 
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.app.backend.modules.warehouse.AisleStatus;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AisleResponseDTO {
-  private UUID id;
-  private UUID floorId;
-  private String floorName;
-  private String name;
-  private AisleStatus status;
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ShelfDTO {
+  UUID id;
+  String name;
+  int maxRow;
+  int maxCol;
+  UUID aisleId;
 }

@@ -1,6 +1,9 @@
 package org.app.backend.modules.librarycard;
 
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.librarycard.dto.LibraryCardCreateDTO;
 import org.app.backend.modules.librarycard.dto.LibraryCardDTO;
@@ -12,27 +15,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LibraryCardServiceImpl implements LibraryCardService {
 
-  private final LibraryCardRepository libraryCardRepository;
-  private final ModelMapper modelMapper;
-  private final org.app.backend.modules.librarycardrequest.LibraryCardRequestRepository
-      requestRepository;
-  private final org.app.backend.modules.user.UserRepository userRepository;
-
-  public LibraryCardServiceImpl(
-      LibraryCardRepository libraryCardRepository,
-      ModelMapper modelMapper,
-      org.app.backend.modules.librarycardrequest.LibraryCardRequestRepository requestRepository,
-      org.app.backend.modules.user.UserRepository userRepository) {
-    this.libraryCardRepository = libraryCardRepository;
-    this.modelMapper = modelMapper;
-    this.requestRepository = requestRepository;
-    this.userRepository = userRepository;
-  }
+  LibraryCardRepository libraryCardRepository;
+  ModelMapper modelMapper;
+  org.app.backend.modules.librarycardrequest.LibraryCardRequestRepository requestRepository;
+  org.app.backend.modules.user.UserRepository userRepository;
 
   @Override
+  @Transactional(readOnly = true)
   public Page<LibraryCardDTO> findAll(Pageable pageable, UUID userId, CardStatus status) {
     if (userId != null) {
       return libraryCardRepository
@@ -50,6 +43,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public LibraryCardDTO findById(UUID id) {
     LibraryCard card =
         libraryCardRepository
@@ -59,6 +53,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   }
 
   @Override
+  @Transactional
   public LibraryCardDTO create(LibraryCardCreateDTO dto, CustomUserDetails actor) {
     LibraryCard card = modelMapper.map(dto, LibraryCard.class);
     card.setStatus(dto.getStatus() != null ? dto.getStatus() : CardStatus.ACTIVE);
@@ -67,6 +62,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   }
 
   @Override
+  @Transactional
   public LibraryCardDTO update(UUID id, LibraryCardUpdateDTO dto, CustomUserDetails actor) {
     LibraryCard card =
         libraryCardRepository
@@ -80,6 +76,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   }
 
   @Override
+  @Transactional
   public void delete(UUID id, CustomUserDetails actor) {
     LibraryCard card =
         libraryCardRepository
@@ -89,6 +86,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   }
 
   @Override
+  @Transactional
   public LibraryCardDTO lock(UUID id, CustomUserDetails actor) {
     LibraryCard card =
         libraryCardRepository
@@ -100,6 +98,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   }
 
   @Override
+  @Transactional
   public void requestPhysicalCard(
       CustomUserDetails user,
       org.app.backend.modules.librarycardrequest.dto.LibraryCardRequestCreateDTO dto) {
@@ -118,6 +117,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   }
 
   @Override
+  @Transactional
   public LibraryCardDTO replace(UUID id, CustomUserDetails actor) {
     LibraryCard oldCard =
         libraryCardRepository

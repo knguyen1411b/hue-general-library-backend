@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.app.backend.modules.book.enums.BookStatus;
 import org.app.backend.modules.category.Category;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,7 +18,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Book { // Có thể extends BaseEntity để có createdAt, updatedAt
+public class Book {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   UUID id;
@@ -39,7 +40,7 @@ public class Book { // Có thể extends BaseEntity để có createdAt, updated
   String thumbnailUrl;
 
   @Column(nullable = false)
-  Integer price; // Giá tiền để tính đền bù 120%
+  Integer price;
 
   @Column(nullable = false)
   String publishers;

@@ -3,11 +3,10 @@ package org.app.backend.modules.rental;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.app.backend.modules.rental.enums.RentalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.app.backend.modules.fine.enums.FineStatus;
-import org.app.backend.modules.rental.enums.RentalStatus;
 
 public interface RentalRepository extends JpaRepository<Rental, UUID> {
   List<Rental> findByUserId(UUID userId);

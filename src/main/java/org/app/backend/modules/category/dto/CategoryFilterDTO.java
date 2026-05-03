@@ -7,5 +7,5 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CategoryFilterDTO {
-  String title; // Tìm kiếm theo tên thể loại
+  String title;
 }

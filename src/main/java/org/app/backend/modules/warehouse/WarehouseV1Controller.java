@@ -1,146 +1,208 @@
 package org.app.backend.modules.warehouse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.app.backend.common.dto.ApiResponse;
+import org.app.backend.common.dto.DataApiResponse;
+import org.app.backend.common.dto.PagedApiResponse;
+import org.app.backend.common.swagger.BadRequestApiResponse;
+import org.app.backend.common.swagger.ForbiddenApiResponse;
+import org.app.backend.common.swagger.NotFoundApiResponse;
+import org.app.backend.common.swagger.UnauthorizedApiResponse;
+import org.app.backend.modules.auth.security.CustomUserDetails;
+import org.app.backend.modules.warehouse.dto.AddShelfDTO;
 import org.app.backend.modules.warehouse.dto.AisleCreateDTO;
-import org.app.backend.modules.warehouse.dto.AisleResponseDTO;
+import org.app.backend.modules.warehouse.dto.AisleDTO;
 import org.app.backend.modules.warehouse.dto.AisleUpdateDTO;
 import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
-import org.app.backend.modules.warehouse.dto.FloorResponseDTO;
+import org.app.backend.modules.warehouse.dto.FloorDTO;
 import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
-import org.app.backend.modules.warehouse.entity.Aisle;
-import org.app.backend.modules.warehouse.entity.Floor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.app.backend.modules.warehouse.dto.ShelfDTO;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/warehouse")
-@Validated
+@RequiredArgsConstructor
+@Tag(name = "Kho (V1)")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class WarehouseV1Controller {
-  private static final Logger logger = LoggerFactory.getLogger(WarehouseV1Controller.class);
-  private final WarehouseService warehouseService;
+  WarehouseService warehouseService;
 
-  public WarehouseV1Controller(WarehouseService warehouseService) {
-    this.warehouseService = warehouseService;
+  @Operation(summary = "Lấy cấu trúc kho hàng dạng cây")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @GetMapping("/tree")
+  public PagedApiResponse<FloorDTO> getTree(@ParameterObject Pageable pageable) {
+    return PagedApiResponse.success(
+        warehouseService.getWarehouseTree(pageable), WarehouseMessage.INDEX_SUCCESS.getMessage());
   }
 
-  // Floor APIs
+  @Operation(
+      summary = "Tạo tầng kho",
+      requestBody =
+          @RequestBody(
+              required = true,
+              content =
+                  @Content(
+                      mediaType = "application/json",
+                      schema = @Schema(implementation = FloorCreateDTO.class))))
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @BadRequestApiResponse
   @PostMapping("/floors")
-  public ResponseEntity<FloorResponseDTO> createFloor(@Valid @RequestBody FloorCreateDTO dto) {
-    logger.info("Creating floor: {}", dto.getName());
-    Floor floor = new Floor();
-    floor.setName(dto.getName());
-    floor.setStatus(dto.getStatus());
-    Floor created = warehouseService.createFloor(floor);
-    return ResponseEntity.status(HttpStatus.CREATED).body(mapToFloorResponseDTO(created));
+  public DataApiResponse<FloorDTO> createFloor(
+      @Valid @org.springframework.web.bind.annotation.RequestBody FloorCreateDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(
+        warehouseService.createFloor(dto, actor),
+        WarehouseMessage.FLOOR_CREATE_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Cập nhật tầng kho")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @BadRequestApiResponse
+  @NotFoundApiResponse
   @PutMapping("/floors/{id}")
-  public ResponseEntity<FloorResponseDTO> updateFloor(
-      @PathVariable UUID id, @Valid @RequestBody FloorUpdateDTO dto) {
-    logger.info("Updating floor with id: {}", id);
-    Floor floor = new Floor();
-    floor.setName(dto.getName());
-    floor.setStatus(dto.getStatus());
-    Floor updated = warehouseService.updateFloor(id, floor);
-    return ResponseEntity.ok(mapToFloorResponseDTO(updated));
+  public DataApiResponse<FloorDTO> updateFloor(
+      @PathVariable UUID id,
+      @Valid @org.springframework.web.bind.annotation.RequestBody FloorUpdateDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(
+        warehouseService.updateFloor(id, dto, actor),
+        WarehouseMessage.FLOOR_UPDATE_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Xóa tầng kho")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
   @DeleteMapping("/floors/{id}")
-  public ResponseEntity<Void> deleteFloor(@PathVariable UUID id) {
-    logger.info("Deleting floor with id: {}", id);
-    warehouseService.deleteFloor(id);
-    return ResponseEntity.noContent().build();
+  public ApiResponse deleteFloor(
+      @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
+    warehouseService.deleteFloor(id, actor);
+    return ApiResponse.success(WarehouseMessage.FLOOR_DELETE_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Lấy chi tiết tầng kho")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
   @GetMapping("/floors/{id}")
-  public ResponseEntity<FloorResponseDTO> getFloorById(@PathVariable UUID id) {
-    logger.debug("Getting floor with id: {}", id);
-    Floor floor = warehouseService.getFloorById(id);
-    return ResponseEntity.ok(mapToFloorResponseDTO(floor));
+  public DataApiResponse<FloorDTO> getFloorById(@PathVariable UUID id) {
+    return DataApiResponse.success(
+        warehouseService.getFloorById(id), WarehouseMessage.FLOOR_SHOW_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Lấy danh sách tầng kho")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
   @GetMapping("/floors")
-  public ResponseEntity<List<FloorResponseDTO>> getAllFloors() {
-    logger.debug("Getting all floors");
-    List<Floor> floors = warehouseService.getAllFloors();
-    List<FloorResponseDTO> response =
-        floors.stream().map(this::mapToFloorResponseDTO).collect(Collectors.toList());
-    return ResponseEntity.ok(response);
+  public DataApiResponse<List<FloorDTO>> getAllFloors() {
+    return DataApiResponse.success(
+        warehouseService.getAllFloors(), WarehouseMessage.FLOOR_LIST_SUCCESS.getMessage());
   }
 
-  // Aisle APIs
+  @Operation(summary = "Tạo dãy kệ")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @BadRequestApiResponse
   @PostMapping("/aisles")
-  public ResponseEntity<AisleResponseDTO> createAisle(@Valid @RequestBody AisleCreateDTO dto) {
-    logger.info("Creating aisle: {} for floor: {}", dto.getName(), dto.getFloorId());
-    Aisle aisle = new Aisle();
-    Floor floor = warehouseService.getFloorById(dto.getFloorId());
-    aisle.setFloor(floor);
-    aisle.setName(dto.getName());
-    aisle.setStatus(dto.getStatus());
-    Aisle created = warehouseService.createAisle(aisle);
-    return ResponseEntity.status(HttpStatus.CREATED).body(mapToAisleResponseDTO(created));
+  public DataApiResponse<AisleDTO> createAisle(
+      @Valid @org.springframework.web.bind.annotation.RequestBody AisleCreateDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(
+        warehouseService.createAisle(dto, actor),
+        WarehouseMessage.AISLE_CREATE_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Cập nhật dãy kệ")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @BadRequestApiResponse
+  @NotFoundApiResponse
   @PutMapping("/aisles/{id}")
-  public ResponseEntity<AisleResponseDTO> updateAisle(
-      @PathVariable UUID id, @Valid @RequestBody AisleUpdateDTO dto) {
-    logger.info("Updating aisle with id: {}", id);
-    Aisle aisle = new Aisle();
-    if (dto.getFloorId() != null) {
-      Floor floor = warehouseService.getFloorById(dto.getFloorId());
-      aisle.setFloor(floor);
-    }
-    aisle.setName(dto.getName());
-    aisle.setStatus(dto.getStatus());
-    Aisle updated = warehouseService.updateAisle(id, aisle);
-    return ResponseEntity.ok(mapToAisleResponseDTO(updated));
+  public DataApiResponse<AisleDTO> updateAisle(
+      @PathVariable UUID id,
+      @Valid @org.springframework.web.bind.annotation.RequestBody AisleUpdateDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(
+        warehouseService.updateAisle(id, dto, actor),
+        WarehouseMessage.AISLE_UPDATE_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Xóa dãy kệ")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
   @DeleteMapping("/aisles/{id}")
-  public ResponseEntity<Void> deleteAisle(@PathVariable UUID id) {
-    logger.info("Deleting aisle with id: {}", id);
-    warehouseService.deleteAisle(id);
-    return ResponseEntity.noContent().build();
+  public ApiResponse deleteAisle(
+      @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
+    warehouseService.deleteAisle(id, actor);
+    return ApiResponse.success(WarehouseMessage.AISLE_DELETE_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Lấy chi tiết dãy kệ")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
   @GetMapping("/aisles/{id}")
-  public ResponseEntity<AisleResponseDTO> getAisleById(@PathVariable UUID id) {
-    logger.debug("Getting aisle with id: {}", id);
-    Aisle aisle = warehouseService.getAisleById(id);
-    return ResponseEntity.ok(mapToAisleResponseDTO(aisle));
+  public DataApiResponse<AisleDTO> getAisleById(@PathVariable UUID id) {
+    return DataApiResponse.success(
+        warehouseService.getAisleById(id), WarehouseMessage.AISLE_SHOW_SUCCESS.getMessage());
   }
 
+  @Operation(summary = "Lấy danh sách dãy kệ")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
   @GetMapping("/aisles")
-  public ResponseEntity<List<AisleResponseDTO>> getAllAisles() {
-    logger.debug("Getting all aisles");
-    List<Aisle> aisles = warehouseService.getAllAisles();
-    List<AisleResponseDTO> response =
-        aisles.stream().map(this::mapToAisleResponseDTO).collect(Collectors.toList());
-    return ResponseEntity.ok(response);
+  public DataApiResponse<List<AisleDTO>> getAllAisles() {
+    return DataApiResponse.success(
+        warehouseService.getAllAisles(), WarehouseMessage.AISLE_LIST_SUCCESS.getMessage());
   }
 
-  private FloorResponseDTO mapToFloorResponseDTO(Floor floor) {
-    return FloorResponseDTO.builder()
-        .id(floor.getId())
-        .name(floor.getName())
-        .status(floor.getStatus())
-        .build();
+  @Operation(
+      summary = "Thêm kệ mới",
+      parameters = {@Parameter(name = "dto", description = "Dữ liệu thêm kệ")})
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @BadRequestApiResponse
+  @PostMapping("/shelves")
+  public DataApiResponse<ShelfDTO> createShelf(
+      @Valid @org.springframework.web.bind.annotation.RequestBody AddShelfDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
+    return DataApiResponse.success(
+        warehouseService.createShelf(dto, actor),
+        WarehouseMessage.SHELF_CREATE_SUCCESS.getMessage());
   }
 
-  private AisleResponseDTO mapToAisleResponseDTO(Aisle aisle) {
-    return AisleResponseDTO.builder()
-        .id(aisle.getId())
-        .floorId(aisle.getFloor().getId())
-        .floorName(aisle.getFloor().getName())
-        .name(aisle.getName())
-        .status(aisle.getStatus())
-        .build();
+  @Operation(summary = "Xóa kệ theo ID")
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @NotFoundApiResponse
+  @DeleteMapping("/shelves/{id}")
+  public ApiResponse deleteShelf(
+      @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
+    warehouseService.deleteShelf(id, actor);
+    return ApiResponse.success(WarehouseMessage.SHELF_DELETE_SUCCESS.getMessage());
   }
 }

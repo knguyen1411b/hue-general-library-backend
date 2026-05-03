@@ -7,7 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
 import org.app.backend.common.dto.PagedApiResponse;
@@ -15,21 +17,21 @@ import org.app.backend.common.swagger.*;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.fine.dto.FineCreateDTO;
 import org.app.backend.modules.fine.dto.FineDTO;
+import org.app.backend.modules.fine.enums.FineStatus;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.app.backend.modules.fine.enums.FineStatus;
-
 
 @RestController
 @RequestMapping("/api/v1/fines")
 @RequiredArgsConstructor
-@Tag(name = "Phiếu phạt (V1)", description = "Quản lý phiếu phạt")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Tag(name = "Phiếu phạt (V1)")
 public class FineV1Controller {
-  private final FineService fineService;
+  FineService fineService;
 
   @Operation(
       summary = "Lấy danh sách phiếu phạt có phân trang",

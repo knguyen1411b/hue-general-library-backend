@@ -17,7 +17,6 @@ import lombok.experimental.FieldDefaults;
 import org.app.backend.common.constants.CloudinaryProperties;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;

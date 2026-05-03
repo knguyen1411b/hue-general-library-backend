@@ -44,7 +44,7 @@ public class BookItemServiceImpl implements BookItemService {
         .findAll(spec, pageable)
         .map(
             bookItem -> {
-              BookItemDTO dto = modelMapper.map(bookItem, BookItemDTO.class);
+              BookItemDTO dto = mapBookItemDto(bookItem);
               if (bookItem.getBook() != null) {
                 dto.setBookTitle(bookItem.getBook().getTitle());
               }
@@ -65,7 +65,7 @@ public class BookItemServiceImpl implements BookItemService {
             .orElseThrow(
                 () ->
                     new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
-    BookItemDTO dto = modelMapper.map(bookItem, BookItemDTO.class);
+    BookItemDTO dto = mapBookItemDto(bookItem);
     if (bookItem.getBook() != null) {
       dto.setBookTitle(bookItem.getBook().getTitle());
     }
@@ -185,6 +185,10 @@ public class BookItemServiceImpl implements BookItemService {
         "Xóa sách thành công: " + bookItem.getBarcode());
     bookItem.setStatus(BookItemStatus.DELETED);
     bookItemRepository.save(bookItem);
+  }
+
+  private BookItemDTO mapBookItemDto(BookItem bookItem) {
+    return modelMapper.map(bookItem, BookItemDTO.class);
   }
 
   private void validateBarcodeAvailability(String barcode) {

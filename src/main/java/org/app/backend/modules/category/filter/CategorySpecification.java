@@ -4,8 +4,8 @@ import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 import org.app.backend.modules.category.Category;
-import org.app.backend.modules.category.CategoryStatus;
 import org.app.backend.modules.category.dto.CategoryFilterDTO;
+import org.app.backend.modules.category.enums.CategoryStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 public class CategorySpecification {

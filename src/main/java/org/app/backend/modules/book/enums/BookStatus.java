@@ -1,4 +1,4 @@
-package org.app.backend.modules.book;
+package org.app.backend.modules.book.enums;
 
 public enum BookStatus {
   ACTIVE,
