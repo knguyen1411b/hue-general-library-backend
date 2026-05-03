@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/warehouse")
 @RequiredArgsConstructor
-@Tag(name = "Warehouse (V1)")
+@Tag(name = "Kho (V1)")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class WarehouseV1Controller {
   WarehouseService warehouseService;
