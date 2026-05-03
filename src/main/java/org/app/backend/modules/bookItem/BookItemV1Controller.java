@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/book-items")
 @RequiredArgsConstructor
-@Tag(name = "Bản sách (V1)", description = "Các API dùng để quản lý bản sách")
+@Tag(name = "Bản sách (V1)")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookItemV1Controller {
   BookItemService bookItemService;

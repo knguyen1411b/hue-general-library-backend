@@ -2,113 +2,282 @@ package org.app.backend.modules.warehouse;
 
 import java.util.List;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.app.backend.common.exception.AppException;
+import org.app.backend.modules.audit.AuditLogService;
+import org.app.backend.modules.audit.enums.AuditLogAction;
+import org.app.backend.modules.audit.enums.AuditLogEntity;
+import org.app.backend.modules.audit.enums.AuditLogStatus;
+import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.warehouse.dto.AddShelfDTO;
+import org.app.backend.modules.warehouse.dto.AisleCreateDTO;
+import org.app.backend.modules.warehouse.dto.AisleDTO;
+import org.app.backend.modules.warehouse.dto.AisleUpdateDTO;
+import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
+import org.app.backend.modules.warehouse.dto.FloorDTO;
+import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
+import org.app.backend.modules.warehouse.dto.ShelfDTO;
 import org.app.backend.modules.warehouse.entity.Aisle;
 import org.app.backend.modules.warehouse.entity.Floor;
 import org.app.backend.modules.warehouse.entity.Shelf;
-import org.app.backend.modules.warehouse.exception.AisleNotFoundException;
-import org.app.backend.modules.warehouse.exception.FloorNotFoundException;
+import org.app.backend.modules.warehouse.repository.AisleRepository;
+import org.app.backend.modules.warehouse.repository.FloorRepository;
+import org.app.backend.modules.warehouse.repository.ShelfRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class WarehouseServiceImpl implements WarehouseService {
-  private final org.app.backend.modules.warehouse.repository.FloorRepository floorRepository;
-  private final org.app.backend.modules.warehouse.repository.AisleRepository aisleRepository;
-  private final org.app.backend.modules.warehouse.repository.ShelfRepository shelfRepository;
+  FloorRepository floorRepository;
+  AisleRepository aisleRepository;
+  ShelfRepository shelfRepository;
+  ModelMapper modelMapper;
+  AuditLogService auditLogService;
 
-  public WarehouseServiceImpl(
-      org.app.backend.modules.warehouse.repository.FloorRepository floorRepository,
-      org.app.backend.modules.warehouse.repository.AisleRepository aisleRepository,
-      org.app.backend.modules.warehouse.repository.ShelfRepository shelfRepository) {
-    this.floorRepository = floorRepository;
-    this.aisleRepository = aisleRepository;
-    this.shelfRepository = shelfRepository;
-  }
-
-  // Floor methods
   @Override
-  public Floor createFloor(Floor floor) {
-    return floorRepository.save(floor);
+  @Transactional(readOnly = true)
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public Page<FloorDTO> getWarehouseTree(Pageable pageable) {
+    return floorRepository.findAll(pageable).map(floor -> modelMapper.map(floor, FloorDTO.class));
   }
 
   @Override
-  public Floor getFloorById(UUID id) {
-    return floorRepository
-        .findById(id)
-        .orElseThrow(() -> new FloorNotFoundException(WarehouseMessage.FLOOR_NOT_FOUND));
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public FloorDTO createFloor(FloorCreateDTO dto, CustomUserDetails actor) {
+    validateFloorNameAvailability(dto.getName(), null);
+
+    Floor floor = modelMapper.map(dto, Floor.class);
+    floorRepository.save(floor);
+    log(actor, AuditLogAction.CREATE, floor.getId().toString(), "Tạo tầng kho: " + floor.getName());
+    return modelMapper.map(floor, FloorDTO.class);
   }
 
   @Override
-  public Floor updateFloor(UUID id, Floor floor) {
-    Floor existing = getFloorById(id);
-    existing.setName(floor.getName());
-    return floorRepository.save(existing);
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public FloorDTO updateFloor(UUID id, FloorUpdateDTO dto, CustomUserDetails actor) {
+    Floor floor = getFloorEntityOrThrow(id);
+
+    if (dto.getName() != null && !dto.getName().isBlank()) {
+      validateFloorNameAvailability(dto.getName(), floor.getName());
+      floor.setName(dto.getName());
+    }
+    if (dto.getStatus() != null) {
+      floor.setStatus(dto.getStatus());
+    }
+
+    floorRepository.save(floor);
+    log(
+        actor,
+        AuditLogAction.UPDATE,
+        floor.getId().toString(),
+        "Cập nhật tầng kho: " + floor.getName());
+    return modelMapper.map(floor, FloorDTO.class);
   }
 
   @Override
-  public void deleteFloor(UUID id) {
-    Floor existing = getFloorById(id);
-    floorRepository.delete(existing);
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public void deleteFloor(UUID id, CustomUserDetails actor) {
+    Floor floor = getFloorEntityOrThrow(id);
+    floor.setStatus(FloorStatus.INACTIVE);
+    floorRepository.save(floor);
+    log(actor, AuditLogAction.DELETE, floor.getId().toString(), "Xóa tầng kho: " + floor.getName());
   }
 
   @Override
-  public List<Floor> getAllFloors() {
-    return floorRepository.findAll();
-  }
-
-  // Aisle methods
-  @Override
-  public Aisle createAisle(Aisle aisle) {
-    return aisleRepository.save(aisle);
+  @Transactional(readOnly = true)
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public FloorDTO getFloorById(UUID id) {
+    return modelMapper.map(getFloorEntityOrThrow(id), FloorDTO.class);
   }
 
   @Override
-  public Aisle getAisleById(UUID id) {
-    return aisleRepository
-        .findById(id)
-        .orElseThrow(() -> new AisleNotFoundException(WarehouseMessage.AISLE_NOT_FOUND));
+  @Transactional(readOnly = true)
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public List<FloorDTO> getAllFloors() {
+    return floorRepository.findAll().stream()
+        .map(floor -> modelMapper.map(floor, FloorDTO.class))
+        .toList();
   }
 
   @Override
-  public Aisle updateAisle(UUID id, Aisle aisle) {
-    Aisle existing = getAisleById(id);
-    existing.setName(aisle.getName());
-    return aisleRepository.save(existing);
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public AisleDTO createAisle(AisleCreateDTO dto, CustomUserDetails actor) {
+    Floor floor = getFloorEntityOrThrow(dto.getFloorId());
+    validateAisleNameAvailability(dto.getFloorId(), dto.getName(), null);
+
+    Aisle aisle = new Aisle();
+    aisle.setFloor(floor);
+    aisle.setName(dto.getName());
+    aisle.setStatus(dto.getStatus());
+    aisleRepository.save(aisle);
+
+    log(actor, AuditLogAction.CREATE, aisle.getId().toString(), "Tạo dãy kệ: " + aisle.getName());
+    return toAisleDTO(aisle);
   }
 
   @Override
-  public void deleteAisle(UUID id) {
-    Aisle existing = getAisleById(id);
-    aisleRepository.delete(existing);
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public AisleDTO updateAisle(UUID id, AisleUpdateDTO dto, CustomUserDetails actor) {
+    Aisle aisle = getAisleEntityOrThrow(id);
+
+    if (dto.getFloorId() != null && !dto.getFloorId().equals(aisle.getFloor().getId())) {
+      Floor newFloor = getFloorEntityOrThrow(dto.getFloorId());
+      aisle.setFloor(newFloor);
+    }
+
+    if (dto.getName() != null && !dto.getName().isBlank()) {
+      validateAisleNameAvailability(aisle.getFloor().getId(), dto.getName(), aisle.getName());
+      aisle.setName(dto.getName());
+    }
+
+    if (dto.getStatus() != null) {
+      aisle.setStatus(dto.getStatus());
+    }
+
+    aisleRepository.save(aisle);
+    log(
+        actor,
+        AuditLogAction.UPDATE,
+        aisle.getId().toString(),
+        "Cập nhật dãy kệ: " + aisle.getName());
+    return toAisleDTO(aisle);
   }
 
   @Override
-  public List<Aisle> getAllAisles() {
-    return aisleRepository.findAll();
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public void deleteAisle(UUID id, CustomUserDetails actor) {
+    Aisle aisle = getAisleEntityOrThrow(id);
+    aisle.setStatus(AisleStatus.INACTIVE);
+    aisleRepository.save(aisle);
+    log(actor, AuditLogAction.DELETE, aisle.getId().toString(), "Xóa dãy kệ: " + aisle.getName());
   }
 
-  // Shelf methods (existing)
   @Override
-  public Page<Floor> getWarehouseTree(Pageable pageable) {
-    return floorRepository.findAll(pageable);
+  @Transactional(readOnly = true)
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public AisleDTO getAisleById(UUID id) {
+    return toAisleDTO(getAisleEntityOrThrow(id));
   }
 
   @Override
-  public Shelf createShelf(AddShelfDTO dto) {
-    Aisle aisle = getAisleById(dto.getAisleId());
+  @Transactional(readOnly = true)
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public List<AisleDTO> getAllAisles() {
+    return aisleRepository.findAll().stream().map(this::toAisleDTO).toList();
+  }
+
+  @Override
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public ShelfDTO createShelf(AddShelfDTO dto, CustomUserDetails actor) {
+    Aisle aisle = getAisleEntityOrThrow(dto.getAisleId());
+
     Shelf shelf = new Shelf();
     shelf.setAisle(aisle);
+    shelf.setName(dto.getName());
     shelf.setMaxCol(dto.getMaxCol());
     shelf.setMaxRow(dto.getMaxRow());
-    return shelfRepository.save(shelf);
+
+    shelfRepository.save(shelf);
+    log(actor, AuditLogAction.CREATE, shelf.getId().toString(), "Tạo kệ: " + shelf.getName());
+    return toShelfDTO(shelf);
   }
 
   @Override
-  public void deleteShelf(UUID id) {
-    shelfRepository.deleteById(id);
+  @Transactional
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public void deleteShelf(UUID id, CustomUserDetails actor) {
+    Shelf shelf =
+        shelfRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    new AppException(
+                        HttpStatus.NOT_FOUND, WarehouseMessage.SHELF_NOT_FOUND.getMessage()));
+    shelfRepository.delete(shelf);
+    log(actor, AuditLogAction.DELETE, shelf.getId().toString(), "Xóa kệ: " + shelf.getName());
+  }
+
+  private Floor getFloorEntityOrThrow(UUID id) {
+    return floorRepository
+        .findById(id)
+        .orElseThrow(
+            () ->
+                new AppException(
+                    HttpStatus.NOT_FOUND, WarehouseMessage.FLOOR_NOT_FOUND.getMessage()));
+  }
+
+  private Aisle getAisleEntityOrThrow(UUID id) {
+    return aisleRepository
+        .findById(id)
+        .orElseThrow(
+            () ->
+                new AppException(
+                    HttpStatus.NOT_FOUND, WarehouseMessage.AISLE_NOT_FOUND.getMessage()));
+  }
+
+  private void validateFloorNameAvailability(String name, String currentName) {
+    if (name == null || name.isBlank() || name.equalsIgnoreCase(currentName)) {
+      return;
+    }
+    if (floorRepository.existsByNameIgnoreCase(name)) {
+      throw new AppException(HttpStatus.CONFLICT, WarehouseMessage.FLOOR_NAME_TAKEN.getMessage());
+    }
+  }
+
+  private void validateAisleNameAvailability(UUID floorId, String name, String currentName) {
+    if (name == null || name.isBlank() || name.equalsIgnoreCase(currentName)) {
+      return;
+    }
+    if (aisleRepository.existsByFloorIdAndNameIgnoreCase(floorId, name)) {
+      throw new AppException(HttpStatus.CONFLICT, WarehouseMessage.AISLE_NAME_TAKEN.getMessage());
+    }
+  }
+
+  private AisleDTO toAisleDTO(Aisle aisle) {
+    return AisleDTO.builder()
+        .id(aisle.getId())
+        .floorId(aisle.getFloor().getId())
+        .floorName(aisle.getFloor().getName())
+        .name(aisle.getName())
+        .status(aisle.getStatus())
+        .build();
+  }
+
+  private ShelfDTO toShelfDTO(Shelf shelf) {
+    return ShelfDTO.builder()
+        .id(shelf.getId())
+        .name(shelf.getName())
+        .maxRow(shelf.getMaxRow())
+        .maxCol(shelf.getMaxCol())
+        .aisleId(shelf.getAisle().getId())
+        .build();
+  }
+
+  private void log(
+      CustomUserDetails actor, AuditLogAction action, String entityId, String message) {
+    auditLogService.log(
+        actor != null ? actor.getId() : null,
+        actor != null ? actor.getUsername() : "system",
+        action,
+        AuditLogEntity.WAREHOUSE,
+        entityId,
+        AuditLogStatus.SUCCESS,
+        message);
   }
 }

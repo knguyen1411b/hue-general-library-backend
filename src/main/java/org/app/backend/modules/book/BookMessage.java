@@ -15,9 +15,7 @@ public enum BookMessage {
   UPDATE_SUCCESS("Cập nhật đầu sách thành công"),
   DELETE_SUCCESS("Xóa đầu sách thành công"),
 
-  NOT_FOUND("Không tìm thấy đầu sách"),
-  ISBN_EXISTS("Mã ISBN đã tồn tại"),
-  CATEGORY_NOT_FOUND("Danh mục không tồn tại");
+  NOT_FOUND("Không tìm thấy đầu sách");
 
   String message;
 }

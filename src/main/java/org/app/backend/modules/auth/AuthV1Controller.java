@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Xác thực (V1)", description = "Các API dùng để xác thực và phân quyền")
+@Tag(name = "Xác thực (V1)")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthV1Controller {
 

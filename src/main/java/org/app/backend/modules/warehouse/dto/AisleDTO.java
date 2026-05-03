@@ -1,24 +1,23 @@
 package org.app.backend.modules.warehouse.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.warehouse.FloorStatus;
+import org.app.backend.modules.warehouse.AisleStatus;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FloorCreateDTO {
-  @NotBlank(message = "Floor name is required")
+public class AisleDTO {
+  UUID id;
+  UUID floorId;
+  String floorName;
   String name;
-
-  @NotNull(message = "Floor status is required")
-  FloorStatus status;
+  AisleStatus status;
 }

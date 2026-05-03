@@ -3,19 +3,18 @@ package org.app.backend.modules.usersubscription;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-
 import org.app.backend.modules.usersubscription.dto.*;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface UserSubscriptionService {
 
   // CRUD
-  UserSubscriptionResponseDTO create(UserSubscriptionCreateDTO dto);
+  UserSubscriptionResponseDTO create(UserSubscription userSubscription);
 
   UserSubscriptionResponseDTO getById(UUID id);
 
-  UserSubscriptionResponseDTO update(UUID id, UserSubscriptionUpdateDTO dto);
+  UserSubscriptionResponseDTO update(UUID id, UserSubscription userSubscription);
 
   void delete(UUID id);
 
@@ -48,4 +47,8 @@ public interface UserSubscriptionService {
   long countByStatus(UserSubscriptionStatus status);
 
   List<UserSubscriptionResponseDTO> getAll();
+
+  UserSubscriptionResponseDTO create(UserSubscriptionCreateDTO dto);
+
+  UserSubscriptionResponseDTO update(UUID id, UserSubscriptionUpdateDTO dto);
 }

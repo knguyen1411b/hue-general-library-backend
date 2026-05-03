@@ -1,12 +1,11 @@
 package org.app.backend.modules.book.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.common.validation.FileValid;
-import org.app.backend.modules.book.BookStatus;
+import org.app.backend.modules.book.enums.BookStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 @Getter

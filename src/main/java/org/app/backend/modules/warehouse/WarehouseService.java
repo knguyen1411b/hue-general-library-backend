@@ -2,39 +2,42 @@ package org.app.backend.modules.warehouse;
 
 import java.util.List;
 import java.util.UUID;
+import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.warehouse.dto.AddShelfDTO;
-import org.app.backend.modules.warehouse.entity.Aisle;
-import org.app.backend.modules.warehouse.entity.Floor;
+import org.app.backend.modules.warehouse.dto.AisleCreateDTO;
+import org.app.backend.modules.warehouse.dto.AisleDTO;
+import org.app.backend.modules.warehouse.dto.AisleUpdateDTO;
+import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
+import org.app.backend.modules.warehouse.dto.FloorDTO;
+import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
+import org.app.backend.modules.warehouse.dto.ShelfDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface WarehouseService {
-  // Floor operations
-  Floor createFloor(Floor floor);
+  Page<FloorDTO> getWarehouseTree(Pageable pageable);
 
-  Floor getFloorById(UUID id);
+  FloorDTO createFloor(FloorCreateDTO dto, CustomUserDetails actor);
 
-  Floor updateFloor(UUID id, Floor floor);
+  FloorDTO updateFloor(UUID id, FloorUpdateDTO dto, CustomUserDetails actor);
 
-  void deleteFloor(UUID id);
+  void deleteFloor(UUID id, CustomUserDetails actor);
 
-  List<Floor> getAllFloors();
+  FloorDTO getFloorById(UUID id);
 
-  // Aisle operations
-  Aisle createAisle(Aisle aisle);
+  List<FloorDTO> getAllFloors();
 
-  Aisle getAisleById(UUID id);
+  AisleDTO createAisle(AisleCreateDTO dto, CustomUserDetails actor);
 
-  Aisle updateAisle(UUID id, Aisle aisle);
+  AisleDTO updateAisle(UUID id, AisleUpdateDTO dto, CustomUserDetails actor);
 
-  void deleteAisle(UUID id);
+  void deleteAisle(UUID id, CustomUserDetails actor);
 
-  List<Aisle> getAllAisles();
+  AisleDTO getAisleById(UUID id);
 
-  // Shelf operations (existing)
-  Page<Floor> getWarehouseTree(Pageable pageable);
+  List<AisleDTO> getAllAisles();
 
-  org.app.backend.modules.warehouse.entity.Shelf createShelf(AddShelfDTO dto);
+  ShelfDTO createShelf(AddShelfDTO dto, CustomUserDetails actor);
 
-  void deleteShelf(UUID id);
+  void deleteShelf(UUID id, CustomUserDetails actor);
 }

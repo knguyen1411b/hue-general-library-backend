@@ -40,7 +40,6 @@ public class UserServiceImpl implements UserService {
   ModelMapper modelMapper;
   AuditLogService auditLogService;
   LibraryCardRepository libraryCardRepository;
-  org.app.backend.modules.librarycardrequest.LibraryCardRequestRepository requestRepository;
 
   @Override
   @Transactional(readOnly = true)
@@ -230,13 +229,12 @@ public class UserServiceImpl implements UserService {
             .findById(user.getId())
             .orElseThrow(
                 () -> new AppException(HttpStatus.NOT_FOUND, UserMessage.NOT_FOUND.getMessage()));
-    // Get user's active library card and set status to LOST
     List<LibraryCard> cards =
         libraryCardRepository.findByUserIdAndStatus(u.getId(), CardStatus.ACTIVE);
     if (cards.isEmpty()) {
       throw new AppException(HttpStatus.NOT_FOUND, UserMessage.LIBRARY_CARD_NOT_FOUND.getMessage());
     }
-    LibraryCard libraryCard = cards.get(0);
+    LibraryCard libraryCard = cards.getFirst();
     libraryCard.setStatus(CardStatus.LOST);
     libraryCardRepository.save(libraryCard);
     auditLogService.log(

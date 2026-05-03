@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/audit-logs")
 @RequiredArgsConstructor
-@Tag(name = "Nhật ký hệ thống (V1)", description = "Các API dùng để xem nhật ký hệ thống")
+@Tag(name = "Nhật ký hệ thống (V1)")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuditLogV1Controller {
   AuditLogService auditLogService;

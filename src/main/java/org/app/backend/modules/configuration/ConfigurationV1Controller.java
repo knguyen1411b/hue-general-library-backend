@@ -1,29 +1,28 @@
 package org.app.backend.modules.configuration;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.configuration.dto.ConfigurationDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/configurations")
+@RequiredArgsConstructor
+@Tag(name = "Cấu hình hệ thống (V1)")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Validated
 public class ConfigurationV1Controller {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigurationV1Controller.class);
-  private final ConfigurationService configurationService;
-
-  public ConfigurationV1Controller(ConfigurationService configurationService) {
-    this.configurationService = configurationService;
-  }
+  ConfigurationService configurationService;
 
   @GetMapping
   public ResponseEntity<List<ConfigurationDTO>> getAllConfigurations() {
-    logger.debug("Getting all configurations");
     List<Configuration> configs = configurationService.getAllConfigurations();
     List<ConfigurationDTO> response =
         configs.stream().map(this::mapToDTO).collect(Collectors.toList());
@@ -33,7 +32,6 @@ public class ConfigurationV1Controller {
   @PutMapping
   public ResponseEntity<ConfigurationDTO> updateConfiguration(
       @Valid @RequestBody ConfigurationDTO dto) {
-    logger.info("Updating configuration with key: {}", dto.getConfigKey());
     Configuration config = new Configuration();
     config.setConfigValue(dto.getConfigValue());
     config.setDescription(dto.getDescription());

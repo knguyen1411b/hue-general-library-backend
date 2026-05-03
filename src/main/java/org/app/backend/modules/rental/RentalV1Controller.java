@@ -7,7 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
 import org.app.backend.common.dto.PagedApiResponse;
@@ -15,20 +17,21 @@ import org.app.backend.common.swagger.*;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.rental.dto.RentalCreateDTO;
 import org.app.backend.modules.rental.dto.RentalDTO;
+import org.app.backend.modules.rental.enums.RentalStatus;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.app.backend.modules.rental.enums.RentalStatus;
 
 @RestController
 @RequestMapping("/api/v1/rentals")
 @RequiredArgsConstructor
-@Tag(name = "Phiếu mượn sách (V1)", description = "Quản lý phiếu mượn sách")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Tag(name = "Phiếu mượn sách (V1)")
 public class RentalV1Controller {
-  private final RentalService rentalService;
+  RentalService rentalService;
 
   @Operation(
       summary = "Lấy danh sách phiếu mượn có phân trang",

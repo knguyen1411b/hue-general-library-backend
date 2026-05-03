@@ -11,6 +11,7 @@ import org.app.backend.modules.audit.enums.AuditLogEntity;
 import org.app.backend.modules.audit.enums.AuditLogStatus;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.category.dto.*;
+import org.app.backend.modules.category.enums.CategoryStatus;
 import org.app.backend.modules.category.filter.CategorySpecification;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;

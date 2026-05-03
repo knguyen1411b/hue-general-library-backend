@@ -3,7 +3,8 @@ package org.app.backend.modules.book;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
-import org.app.backend.modules.book.filter.BookFilterDTO;
+import org.app.backend.modules.book.dto.BookFilterDTO;
+import org.app.backend.modules.book.enums.BookStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 public class BookSpecification {
@@ -11,7 +12,6 @@ public class BookSpecification {
     return (root, query, cb) -> {
       List<Predicate> predicates = new ArrayList<>();
 
-      // Luôn mặc định loại bỏ đầu sách đã xóa mềm (trừ khi có yêu cầu đặc biệt)
       predicates.add(cb.notEqual(root.get("status"), BookStatus.DELETED));
 
       if (filter != null) {

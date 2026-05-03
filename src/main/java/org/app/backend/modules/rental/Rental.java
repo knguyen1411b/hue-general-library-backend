@@ -6,11 +6,11 @@ import java.time.LocalDate;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.app.backend.modules.rental.enums.RentalStatus;
+import org.app.backend.modules.usersubscription.UserSubscription;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
-import org.app.backend.modules.rental.enums.RentalStatus;
-
 
 @Entity
 @Table(name = "tbl_rental")
@@ -51,4 +51,9 @@ public class Rental {
   @UpdateTimestamp
   @Column(name = "updated_at", nullable = false)
   Instant updatedAt;
+
+  public UserSubscription getSubscription() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'getSubscription'");
+  }
 }

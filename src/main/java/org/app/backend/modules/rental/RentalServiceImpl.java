@@ -3,19 +3,21 @@ package org.app.backend.modules.rental;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.auth.security.CustomUserDetails;
+import org.app.backend.modules.book.Book;
+import org.app.backend.modules.book.BookRepository;
 import org.app.backend.modules.bookItem.BookItem;
 import org.app.backend.modules.bookItem.BookItemRepository;
 import org.app.backend.modules.bookItem.enums.BookItemStatus;
-import org.app.backend.modules.book.Book;
-import org.app.backend.modules.book.BookRepository;
 import org.app.backend.modules.fine.Fine;
 import org.app.backend.modules.fine.FineRepository;
 import org.app.backend.modules.fine.enums.FineStatus;
 import org.app.backend.modules.rental.dto.RentalCreateDTO;
 import org.app.backend.modules.rental.dto.RentalDTO;
 import org.app.backend.modules.rental.enums.RentalStatus;
-import org.app.backend.modules.usersubscription.UserSubscription;
 import org.app.backend.modules.usersubscription.UserSubscriptionRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -24,32 +26,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RentalServiceImpl implements RentalService {
 
-  private final RentalRepository rentalRepository;
-  private final ModelMapper modelMapper;
-  private final UserSubscriptionRepository userSubscriptionRepository;
-  private final BookItemRepository bookItemRepository;
-  private final BookRepository bookRepository;
-  private final FineRepository fineRepository;
-
-  public RentalServiceImpl(
-      RentalRepository rentalRepository,
-      ModelMapper modelMapper,
-      UserSubscriptionRepository userSubscriptionRepository,
-      BookItemRepository bookItemRepository,
-      BookRepository bookRepository,
-      FineRepository fineRepository) {
-    this.rentalRepository = rentalRepository;
-    this.modelMapper = modelMapper;
-    this.userSubscriptionRepository = userSubscriptionRepository;
-    this.bookItemRepository = bookItemRepository;
-    this.bookRepository = bookRepository;
-    this.fineRepository = fineRepository;
-  }
+  RentalRepository rentalRepository;
+  ModelMapper modelMapper;
+  UserSubscriptionRepository userSubscriptionRepository;
+  BookItemRepository bookItemRepository;
+  BookRepository bookRepository;
+  FineRepository fineRepository;
 
   @Override
+  @Transactional(readOnly = true)
   public Page<RentalDTO> findAll(
       Pageable pageable, UUID userId, RentalStatus status, UUID bookItemId) {
     if (userId != null) {
@@ -71,6 +60,7 @@ public class RentalServiceImpl implements RentalService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public RentalDTO findById(UUID id) {
     Rental rental =
         rentalRepository.findById(id).orElseThrow(() -> new RuntimeException("Rental not found"));
@@ -78,9 +68,10 @@ public class RentalServiceImpl implements RentalService {
   }
 
   @Override
+  @Transactional
   public RentalDTO create(RentalCreateDTO dto, CustomUserDetails actor) {
     // 1. Check user subscription
-    UserSubscription activeSub =
+    Rental activeSub =
         userSubscriptionRepository
             .findActiveSubscriptionByUserId(dto.getUserId())
             .orElseThrow(
@@ -142,6 +133,7 @@ public class RentalServiceImpl implements RentalService {
   }
 
   @Override
+  @Transactional
   public RentalDTO returnBook(UUID id, CustomUserDetails actor) {
     Rental rental =
         rentalRepository.findById(id).orElseThrow(() -> new RuntimeException("Rental not found"));
@@ -163,7 +155,7 @@ public class RentalServiceImpl implements RentalService {
     // 3. Check overdue and create fine if needed
     if (today.isAfter(rental.getDueDate())) {
       long overdueDays = ChronoUnit.DAYS.between(rental.getDueDate(), today);
-      UserSubscription activeSub =
+      Rental activeSub =
           userSubscriptionRepository
               .findActiveSubscriptionByUserId(rental.getUserId())
               .orElse(null);
@@ -195,6 +187,7 @@ public class RentalServiceImpl implements RentalService {
   }
 
   @Override
+  @Transactional
   public RentalDTO renewBook(UUID id, CustomUserDetails actor) {
     Rental rental =
         rentalRepository.findById(id).orElseThrow(() -> new RuntimeException("Rental not found"));
@@ -214,13 +207,11 @@ public class RentalServiceImpl implements RentalService {
     }
 
     // 3. Get subscription to extend due date
-    UserSubscription activeSub =
+    Rental activeSub =
         userSubscriptionRepository
             .findActiveSubscriptionByUserId(rental.getUserId())
             .orElseThrow(
-                () ->
-                    new RuntimeException(
-                        "Không tìm thấy gói cước hợp lệ cho người dùng!"));
+                () -> new RuntimeException("Không tìm thấy gói cước hợp lệ cho người dùng!"));
 
     // 4. Extend due date by subscription duration
     int durationDays = activeSub.getSubscription().getDurationDays();
@@ -231,6 +222,7 @@ public class RentalServiceImpl implements RentalService {
   }
 
   @Override
+  @Transactional
   public RentalDTO reportLost(UUID id, CustomUserDetails actor) {
     Rental rental =
         rentalRepository.findById(id).orElseThrow(() -> new RuntimeException("Rental not found"));
@@ -244,10 +236,8 @@ public class RentalServiceImpl implements RentalService {
     bookItemRepository.save(bookItem);
 
     // 2. Get subscription for compensation fee
-    UserSubscription activeSub =
-        userSubscriptionRepository
-            .findActiveSubscriptionByUserId(rental.getUserId())
-            .orElse(null);
+    Rental activeSub =
+        userSubscriptionRepository.findActiveSubscriptionByUserId(rental.getUserId()).orElse(null);
 
     // 3. Create fine for lost book compensation
     if (activeSub != null && bookItem.getBook() != null) {
@@ -259,8 +249,11 @@ public class RentalServiceImpl implements RentalService {
               .rental(rental)
               .amount(compensationAmount)
               .reason(
-                  "Bồi thường sách mất: " + bookItem.getBook().getTitle() + " - "
-                      + compensationRate + "%")
+                  "Bồi thường sách mất: "
+                      + bookItem.getBook().getTitle()
+                      + " - "
+                      + compensationRate
+                      + "%")
               .status(FineStatus.UNPAID)
               .build();
       fineRepository.save(fine);
@@ -272,6 +265,7 @@ public class RentalServiceImpl implements RentalService {
   }
 
   @Override
+  @Transactional
   public void delete(UUID id, CustomUserDetails actor) {
     Rental rental =
         rentalRepository.findById(id).orElseThrow(() -> new RuntimeException("Rental not found"));

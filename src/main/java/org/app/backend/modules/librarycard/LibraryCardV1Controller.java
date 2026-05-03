@@ -7,7 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
 import org.app.backend.common.dto.PagedApiResponse;
@@ -27,9 +29,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/library-cards")
 @RequiredArgsConstructor
-@Tag(name = "Thẻ thư viện (V1)", description = "Quản lý thẻ thư viện")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Tag(name = "Thẻ thư viện (V1)")
 public class LibraryCardV1Controller {
-  private final LibraryCardService libraryCardService;
+  LibraryCardService libraryCardService;
 
   @Operation(
       summary = "Lấy danh sách thẻ thư viện có phân trang",

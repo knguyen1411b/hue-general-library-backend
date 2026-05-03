@@ -13,6 +13,7 @@ import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.book.Book;
+import org.app.backend.modules.category.enums.CategoryStatus;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 

@@ -7,14 +7,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CategoryService {
-
-  // Ai cũng xem được danh sách thể loại (kể cả User chưa đăng nhập)
   Page<CategoryDTO> findAll(CategoryFilterDTO filter, Pageable pageable);
 
-  // Lấy chi tiết 1 thể loại
   CategoryDTO findById(UUID id);
-
-  // --- CÁC HÀM CRUD DÀNH CHO THỦ THƯ ---
 
   void create(CategoryCreateDTO dto, CustomUserDetails actor);
 
