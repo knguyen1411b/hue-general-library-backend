@@ -1,5 +1,6 @@
 package org.app.backend.modules.book;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,12 @@ import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.dto.*;
 import org.app.backend.modules.book.dto.BookFilterDTO;
 import org.app.backend.modules.book.enums.BookStatus;
+import org.app.backend.modules.bookItem.BookItem;
+import org.app.backend.modules.bookItem.BookItemRepository;
+import org.app.backend.modules.bookItem.dto.BookItemCreateDTO;
+import org.app.backend.modules.bookItem.enums.BookItemStatus;
 import org.app.backend.modules.category.Category;
+import org.app.backend.modules.book.utils.BookUtil;
 import org.app.backend.modules.category.CategoryRepository;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
@@ -33,6 +39,7 @@ public class BookServiceImpl implements BookService {
   FileService fileService;
   ModelMapper modelMapper;
   AuditLogService auditLogService;
+  BookItemRepository bookItemRepository;
 
   @Override
   @Transactional(readOnly = true)
@@ -78,6 +85,25 @@ public class BookServiceImpl implements BookService {
     }
 
     bookRepository.save(book);
+
+    // Generate BookItems based on count
+    int count = dto.getCount();
+    if (count > 0) {
+      for (int i = 0; i < count; i++) {
+        String barcode;
+        do {
+          barcode = BookUtil.generateBarcode();
+        } while (bookItemRepository.existsByBarcode(barcode));
+
+        BookItem bookItem = BookItem.builder()
+                .barcode(barcode)
+                .book(book)
+                .importDate(LocalDate.now())
+                .status(BookItemStatus.AVAILABLE)
+                .build();
+        bookItemRepository.save(bookItem);
+      }
+    }
 
     auditLogService.log(
         actor != null ? actor.getId() : null,
