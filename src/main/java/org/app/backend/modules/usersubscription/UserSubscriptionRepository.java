@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.app.backend.modules.rental.Rental;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -28,5 +27,5 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
   Optional<UserSubscription> findTopByUserIdAndEndDateAfterOrderByEndDateDesc(
       UUID userId, LocalDate now);
 
-  Optional<Rental> findActiveSubscriptionByUserId(UUID userId);
+  Optional<UserSubscription> findActiveSubscriptionByUserId(UUID userId);
 }
