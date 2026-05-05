@@ -18,6 +18,7 @@ import org.app.backend.modules.fine.enums.FineStatus;
 import org.app.backend.modules.rental.dto.RentalCreateDTO;
 import org.app.backend.modules.rental.dto.RentalDTO;
 import org.app.backend.modules.rental.enums.RentalStatus;
+import org.app.backend.modules.usersubscription.UserSubscription;
 import org.app.backend.modules.usersubscription.UserSubscriptionRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -71,7 +72,7 @@ public class RentalServiceImpl implements RentalService {
   @Transactional
   public RentalDTO create(RentalCreateDTO dto, CustomUserDetails actor) {
     // 1. Check user subscription
-    Rental activeSub =
+    UserSubscription activeSub =
         userSubscriptionRepository
             .findActiveSubscriptionByUserId(dto.getUserId())
             .orElseThrow(
@@ -155,7 +156,7 @@ public class RentalServiceImpl implements RentalService {
     // 3. Check overdue and create fine if needed
     if (today.isAfter(rental.getDueDate())) {
       long overdueDays = ChronoUnit.DAYS.between(rental.getDueDate(), today);
-      Rental activeSub =
+      UserSubscription activeSub =
           userSubscriptionRepository
               .findActiveSubscriptionByUserId(rental.getUserId())
               .orElse(null);
@@ -207,7 +208,7 @@ public class RentalServiceImpl implements RentalService {
     }
 
     // 3. Get subscription to extend due date
-    Rental activeSub =
+    UserSubscription activeSub =
         userSubscriptionRepository
             .findActiveSubscriptionByUserId(rental.getUserId())
             .orElseThrow(
@@ -236,7 +237,7 @@ public class RentalServiceImpl implements RentalService {
     bookItemRepository.save(bookItem);
 
     // 2. Get subscription for compensation fee
-    Rental activeSub =
+    UserSubscription activeSub =
         userSubscriptionRepository.findActiveSubscriptionByUserId(rental.getUserId()).orElse(null);
 
     // 3. Create fine for lost book compensation
