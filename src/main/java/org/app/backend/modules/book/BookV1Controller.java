@@ -120,7 +120,7 @@ public class BookV1Controller {
   @ForbiddenApiResponse
   @BadRequestApiResponse
   @NotFoundApiResponse
-  @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ApiResponse update(
       @PathVariable UUID id,
       @Valid @ModelAttribute BookUpdateDTO dto,

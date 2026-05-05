@@ -11,7 +11,6 @@ import org.app.backend.modules.audit.AuditLogService;
 import org.app.backend.modules.audit.enums.*;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.dto.*;
-import org.app.backend.modules.book.dto.BookFilterDTO;
 import org.app.backend.modules.book.enums.BookStatus;
 import org.app.backend.modules.bookItem.BookItem;
 import org.app.backend.modules.bookItem.BookItemRepository;
@@ -65,10 +64,9 @@ public class BookServiceImpl implements BookService {
   public void create(@NonNull BookCreateDTO dto, CustomUserDetails actor) {
     validateIsbnAvailability(dto.getIsbn(), null);
 
-    Category category =
-        categoryRepository
-            .findById(dto.getCategoryId())
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
+    Category category = categoryRepository
+        .findById(dto.getCategoryId())
+        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
 
     modelMapper
         .typeMap(BookCreateDTO.class, Book.class)
@@ -96,11 +94,11 @@ public class BookServiceImpl implements BookService {
         } while (bookItemRepository.existsByBarcode(barcode));
 
         BookItem bookItem = BookItem.builder()
-                .barcode(barcode)
-                .book(book)
-                .importDate(LocalDate.now())
-                .status(BookItemStatus.AVAILABLE)
-                .build();
+            .barcode(barcode)
+            .book(book)
+            .importDate(LocalDate.now())
+            .status(BookItemStatus.AVAILABLE)
+            .build();
         bookItemRepository.save(bookItem);
       }
     }
@@ -119,20 +117,18 @@ public class BookServiceImpl implements BookService {
   @Transactional
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   public void update(UUID id, BookUpdateDTO dto, CustomUserDetails actor) {
-    Book book =
-        bookRepository
-            .findById(id)
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy đầu sách"));
+    Book book = bookRepository
+        .findById(id)
+        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy đầu sách"));
 
     if (dto.getIsbn() != null) {
       validateIsbnAvailability(dto.getIsbn(), book.getIsbn());
     }
 
     if (dto.getCategoryId() != null) {
-      Category category =
-          categoryRepository
-              .findById(dto.getCategoryId())
-              .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
+      Category category = categoryRepository
+          .findById(dto.getCategoryId())
+          .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
       book.setCategory(category);
     }
 
@@ -141,7 +137,47 @@ public class BookServiceImpl implements BookService {
           fileService.upload(dto.getThumbnail(), book.getId().toString() + "_thumb"));
     }
 
-    modelMapper.map(dto, book);
+    if (dto.getTitle() != null) {
+      book.setTitle(dto.getTitle());
+    }
+    if (dto.getDescription() != null) {
+      book.setDescription(dto.getDescription());
+    }
+    if (dto.getPrice() != null) {
+      book.setPrice(dto.getPrice());
+    }
+    if (dto.getAuthor() != null) {
+      book.setAuthor(dto.getAuthor());
+    }
+    if (dto.getPublishers() != null) {
+      book.setPublishers(dto.getPublishers());
+    }
+    if (dto.getCount() != null) {
+      book.setCount(dto.getCount());
+      int count = dto.getCount();
+      if (count > 0) {
+        for (int i = 0; i < count; i++) {
+          String barcode;
+          do {
+            barcode = BookUtil.generateBarcode();
+          } while (bookItemRepository.existsByBarcode(barcode));
+
+          BookItem bookItem = BookItem.builder()
+              .barcode(barcode)
+              .book(book)
+              .importDate(LocalDate.now())
+              .status(BookItemStatus.AVAILABLE)
+              .build();
+          bookItemRepository.save(bookItem);
+        }
+      }
+    }
+    if (dto.getPublishedYear() != null) {
+      book.setPublishedYear(dto.getPublishedYear());
+    }
+    if (dto.getStatus() != null) {
+      book.setStatus(dto.getStatus());
+    }
     bookRepository.save(book);
 
     auditLogService.log(
@@ -158,10 +194,9 @@ public class BookServiceImpl implements BookService {
   @Transactional
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   public void delete(UUID id, CustomUserDetails actor) {
-    Book book =
-        bookRepository
-            .findById(id)
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy đầu sách"));
+    Book book = bookRepository
+        .findById(id)
+        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy đầu sách"));
 
     book.setStatus(BookStatus.DELETED);
     bookRepository.save(book);

@@ -90,3 +90,23 @@ spotless {
 tasks.withType(Test).configureEach {
     enabled = false
 }
+
+
+tasks.withType(JavaExec).configureEach {
+    // project.rootDir luôn trỏ về thư mục chứa file settings.gradle (thư mục gốc)
+    def envFile = file("${project.rootDir}/.env")
+    if (envFile.exists()) {
+        envFile.eachLine { line ->
+            def envLine = line.trim()
+            if (envLine && !envLine.startsWith('#')) {
+                def parts = envLine.split('=', 2)
+                if (parts.length == 2) {
+                    environment parts[0].trim(), parts[1].trim()
+                }
+            }
+        }
+        println "✅ Gradle: Loaded environment variables from ${envFile.absolutePath}"
+    } else {
+        println "❌ Gradle: .env file NOT FOUND at ${envFile.absolutePath}"
+    }
+}

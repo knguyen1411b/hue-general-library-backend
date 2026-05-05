@@ -58,17 +58,14 @@ public class UserSubscription {
   Integer price;
 
   public int getOverdueFeePerDay() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'getOverdueFeePerDay'");
   }
 
   public int getDurationDays() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'getDurationDays'");
   }
 
   public int getCompensationRate() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'getCompensationRate'");
   }
 }

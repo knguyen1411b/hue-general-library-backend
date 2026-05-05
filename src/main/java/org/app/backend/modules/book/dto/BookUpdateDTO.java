@@ -26,6 +26,7 @@ public class BookUpdateDTO {
   @Schema(type = "string", format = "binary")
   @FileValid(
       types = {"image/jpeg", "image/png"},
-      maxSize = 5 * 1024 * 1024)
+      maxSize = 5 * 1024 * 1024,
+      required = false)
   MultipartFile thumbnail;
 }
