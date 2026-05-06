@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(value = "userDetails", key = "#user.id")
   public void updateMe(CustomUserDetails user, MeUpdateDTO dto) {
     User u =
         userRepository
