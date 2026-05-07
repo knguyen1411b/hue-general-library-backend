@@ -205,4 +205,14 @@ public class WarehouseV1Controller {
     warehouseService.deleteShelf(id, actor);
     return ApiResponse.success(WarehouseMessage.SHELF_DELETE_SUCCESS.getMessage());
   }
+  @Operation(summary = "Lấy danh sách kệ")
+@UnauthorizedApiResponse
+@ForbiddenApiResponse
+@GetMapping("/shelves")
+public DataApiResponse<List<ShelfDTO>> getAllShelves() {
+    return DataApiResponse.success(
+            warehouseService.getAllShelves(),
+            WarehouseMessage.SHELF_LIST_SUCCESS.getMessage()
+    );
+}
 }
