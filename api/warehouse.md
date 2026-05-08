@@ -20,4 +20,4 @@
 | GET | `/api/v1/warehouse/aisles` | Lấy danh sách dãy kệ | `JWT (mac dinh)` |
 | POST | `/api/v1/warehouse/shelves` | Thêm kệ mới | `JWT (mac dinh)` |
 | DELETE | `/api/v1/warehouse/shelves/{id}` | Xóa kệ theo ID | `JWT (mac dinh)` |
-| GET | `/api/v1/warehouse/shelves` | Lấy danh sách kệ | JWT (mặc định) |
+| GET | `/api/v1/warehouse/shelves` | Lấy danh sách kệ | `JWT (mac dinh)` |
