@@ -40,4 +40,5 @@ public interface WarehouseService {
   ShelfDTO createShelf(AddShelfDTO dto, CustomUserDetails actor);
 
   void deleteShelf(UUID id, CustomUserDetails actor);
+  List<ShelfDTO> getAllShelves();
 }

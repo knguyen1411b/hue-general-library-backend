@@ -22,6 +22,7 @@ public enum WarehouseMessage {
   AISLE_LIST_SUCCESS("Lấy danh sách dãy kệ thành công"),
   SHELF_CREATE_SUCCESS("Thêm kệ mới thành công"),
   SHELF_DELETE_SUCCESS("Xóa kệ thành công"),
+  SHELF_LIST_SUCCESS("Lấy danh sách kệ thành công"), 
   FLOOR_NOT_FOUND("Không tìm thấy tầng kho"),
   AISLE_NOT_FOUND("Không tìm thấy dãy kệ"),
   SHELF_NOT_FOUND("Không tìm thấy kệ"),
