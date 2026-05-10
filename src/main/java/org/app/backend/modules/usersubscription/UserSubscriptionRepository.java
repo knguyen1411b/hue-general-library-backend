@@ -27,5 +27,8 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
   Optional<UserSubscription> findTopByUserIdAndEndDateAfterOrderByEndDateDesc(
       UUID userId, LocalDate now);
 
-  Optional<UserSubscription> findActiveSubscriptionByUserId(UUID userId);
+  default Optional<UserSubscription> findActiveSubscriptionByUserId(UUID userId) {
+    return findTopByUserIdAndEndDateAfterOrderByEndDateDesc(userId, LocalDate.now())
+        .filter(sub -> sub.getStatus() == UserSubscriptionStatus.ACTIVE);
+  }
 }
