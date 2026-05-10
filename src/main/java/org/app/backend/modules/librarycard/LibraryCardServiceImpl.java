@@ -55,7 +55,10 @@ public class LibraryCardServiceImpl implements LibraryCardService {
   @Override
   @Transactional
   public LibraryCardDTO create(LibraryCardCreateDTO dto, CustomUserDetails actor) {
-    LibraryCard card = modelMapper.map(dto, LibraryCard.class);
+    LibraryCard card = new LibraryCard();
+    card.setUserId(dto.getUserId());
+    card.setIssueDate(dto.getIssueDate());
+    card.setExpiryDate(dto.getExpiryDate());
     card.setStatus(dto.getStatus() != null ? dto.getStatus() : CardStatus.ACTIVE);
     LibraryCard saved = libraryCardRepository.save(card);
     return modelMapper.map(saved, LibraryCardDTO.class);
