@@ -7,7 +7,5 @@ public enum BookItemStatus {
   DAMAGED,
   MAINTENANCE,
   DISCARDED,
-  PENDING,
-  INACTIVE,
   DELETED
 }

@@ -53,7 +53,6 @@ public class Rental {
   Instant updatedAt;
 
   public UserSubscription getSubscription() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'getSubscription'");
   }
 }

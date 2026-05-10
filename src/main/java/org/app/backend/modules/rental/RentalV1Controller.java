@@ -185,7 +185,7 @@ public class RentalV1Controller {
   @ForbiddenApiResponse
   @NotFoundApiResponse
   @DeleteMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse delete(
       @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
     rentalService.delete(id, actor);
