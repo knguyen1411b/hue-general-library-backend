@@ -280,4 +280,13 @@ public class WarehouseServiceImpl implements WarehouseService {
         AuditLogStatus.SUCCESS,
         message);
   }
+  @Override
+@Transactional(readOnly = true)
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+public List<ShelfDTO> getAllShelves() {
+    return shelfRepository.findAll()
+            .stream()
+            .map(this::toShelfDTO) 
+            .toList();
+}
 }
