@@ -19,10 +19,10 @@ public class BookItemCreateDTO {
   @NotNull(message = "Book ID không được để trống")
   UUID bookId;
 
-   @Schema(description = "Barcode của bản sách", example = "LL04E6OVSCPA6R6PPPA")
-   @NotBlank(message = "Barcode không được để trống")
-   @Pattern(regexp = "^[A-Z]{19}$", message = "Barcode phải là chuỗi 19 ký tự chữ cái in hoa")
-   String barcode;
+  @Schema(description = "Barcode của bản sách", example = "LL04E6OVSCPA6R6PPPA")
+  @NotBlank(message = "Barcode không được để trống")
+  @Pattern(regexp = "^[A-Z]{19}$", message = "Barcode phải là chuỗi 19 ký tự chữ cái in hoa")
+  String barcode;
 
   @Schema(description = "Ngày nhập kho", example = "2026-04-29")
   @NotNull(message = "Ngày nhập kho không được để trống")

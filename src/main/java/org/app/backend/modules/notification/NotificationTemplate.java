@@ -5,17 +5,15 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.app.backend.modules.notification.enums.NotificationType;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
-import org.app.backend.modules.notification.enums.NotificationType;
 
 @Entity
 @Table(
     name = "tbl_notification_template",
-    indexes = {
-      @Index(name = "idx_template_key", columnList = "template_key", unique = true)
-    })
+    indexes = {@Index(name = "idx_template_key", columnList = "template_key", unique = true)})
 @Getter
 @Setter
 @Builder
@@ -46,7 +44,7 @@ public class NotificationTemplate {
   String messageTemplate;
 
   @Column(columnDefinition = "text")
-  String variables; 
+  String variables;
 
   @CreationTimestamp
   @Column(name = "created_at", updatable = false, nullable = false)

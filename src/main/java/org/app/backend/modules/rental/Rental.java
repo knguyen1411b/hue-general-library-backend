@@ -56,4 +56,3 @@ public class Rental {
     throw new UnsupportedOperationException("Unimplemented method 'getSubscription'");
   }
 }
-

@@ -9,16 +9,15 @@ import lombok.experimental.FieldDefaults;
 import org.app.backend.common.exception.AppException;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.notification.dto.*;
-import org.app.backend.modules.notification.Notification;
 import org.app.backend.modules.notification.enums.NotificationReadStatus;
 import org.app.backend.modules.notification.enums.NotificationStatus;
 import org.app.backend.modules.notification.enums.NotificationType;
 import org.app.backend.modules.user.User;
 import org.app.backend.modules.user.UserRepository;
+import org.app.backend.modules.user.UserRole;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,25 +32,30 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   @Transactional(readOnly = true)
-  public Page<NotificationDTO> findAllMyNotifications(CustomUserDetails user, NotificationFilterDTO filter, Pageable pageable) {
+  public Page<NotificationDTO> findAllMyNotifications(
+      CustomUserDetails user, NotificationFilterDTO filter, Pageable pageable) {
     filter.setUserId(user.getId());
-    Specification<Notification> spec = NotificationSpecification.filter(filter);
-    return notificationRepository.findAll(spec, pageable)
+    return notificationRepository
+        .findAll(NotificationSpecification.filter(filter), pageable)
         .map(noti -> modelMapper.map(noti, NotificationDTO.class));
   }
 
   @Override
   @Transactional(readOnly = true)
   public NotificationDTO findById(UUID id, CustomUserDetails user) {
-    return notificationRepository.findByIdAndUser_Id(id, user.getId())
-        .map(noti -> modelMapper.map(noti, NotificationDTO.class))
-        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo"));
+    Notification noti =
+        notificationRepository
+            .findByIdAndUser_Id(id, user.getId())
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo"));
+
+    return modelMapper.map(noti, NotificationDTO.class);
   }
 
   @Override
   @Transactional(readOnly = true)
   public long getUnreadCount(CustomUserDetails user) {
-    return notificationRepository.countByUser_IdAndReadStatus(user.getId(), NotificationReadStatus.UNREAD);
+    return notificationRepository.countByUser_IdAndReadStatus(
+        user.getId(), NotificationReadStatus.UNREAD);
   }
 
   @Override
@@ -70,9 +74,11 @@ public class NotificationServiceImpl implements NotificationService {
   @Override
   @Transactional
   public void markAsRead(UUID id, CustomUserDetails user) {
-    Notification noti = notificationRepository.findByIdAndUser_Id(id, user.getId())
-        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo"));
-    
+    Notification noti =
+        notificationRepository
+            .findByIdAndUser_Id(id, user.getId())
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo"));
+
     if (noti.getReadStatus() == NotificationReadStatus.UNREAD) {
       noti.setReadStatus(NotificationReadStatus.READ);
       noti.setReadAt(Instant.now());
@@ -83,41 +89,149 @@ public class NotificationServiceImpl implements NotificationService {
   @Override
   @Transactional
   public void markAllAsRead(CustomUserDetails user) {
-    List<Notification> unreadNotis = notificationRepository.findByUser_IdAndReadStatus(user.getId(), NotificationReadStatus.UNREAD);
+    List<Notification> unreadNotis =
+        notificationRepository.findByUser_IdAndReadStatus(
+            user.getId(), NotificationReadStatus.UNREAD);
     Instant now = Instant.now();
-    unreadNotis.forEach(noti -> {
-      noti.setReadStatus(NotificationReadStatus.READ);
-      noti.setReadAt(now);
-    });
+    unreadNotis.forEach(
+        noti -> {
+          noti.setReadStatus(NotificationReadStatus.READ);
+          noti.setReadAt(now);
+        });
     notificationRepository.saveAll(unreadNotis);
   }
 
   @Override
   @Transactional
   public void deleteNotification(UUID id, CustomUserDetails user) {
-    Notification noti = notificationRepository.findByIdAndUser_Id(id, user.getId())
-        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo"));
+    Notification noti =
+        notificationRepository
+            .findByIdAndUser_Id(id, user.getId())
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo"));
+
     notificationRepository.delete(noti);
   }
 
   @Override
   @Transactional
-  public NotificationDTO createReminderNotification(UUID userId, NotificationType type, String title, String message, UUID relatedEntityId, String relatedEntityType) {
-    User targetUser = userRepository.findById(userId)
-        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+  public NotificationDTO createReminderNotification(
+      UUID userId,
+      NotificationType type,
+      String title,
+      String message,
+      UUID relatedEntityId,
+      String relatedEntityType) {
+    User targetUser =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
 
-    Notification noti = Notification.builder()
-        .user(targetUser)
-        .type(type)
-        .title(title)
-        .message(message)
-        .relatedEntityId(relatedEntityId)
-        .relatedEntityType(relatedEntityType)
-        .readStatus(NotificationReadStatus.UNREAD)
-        .notificationStatus(NotificationStatus.PENDING)
-        .build();
+    Notification noti =
+        Notification.builder()
+            .user(targetUser)
+            .type(type)
+            .title(title)
+            .message(message)
+            .relatedEntityId(relatedEntityId)
+            .relatedEntityType(relatedEntityType)
+            .readStatus(NotificationReadStatus.UNREAD)
+            .notificationStatus(NotificationStatus.PENDING)
+            .build();
 
     Notification saved = notificationRepository.save(noti);
     return modelMapper.map(saved, NotificationDTO.class);
+  }
+
+  @Override
+  @Transactional
+  public NotificationDTO create(NotificationCreateDTO dto, CustomUserDetails actor) {
+    // Kiểm tra user tồn tại
+    User targetUser =
+        userRepository
+            .findById(dto.getUserId())
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+
+    Notification noti =
+        Notification.builder()
+            .user(targetUser)
+            .type(dto.getType())
+            .title(dto.getTitle())
+            .message(dto.getMessage())
+            .relatedEntityId(dto.getRelatedEntityId())
+            .relatedEntityType(dto.getRelatedEntityType())
+            .readStatus(NotificationReadStatus.UNREAD)
+            .notificationStatus(NotificationStatus.PENDING)
+            .build();
+
+    Notification saved = notificationRepository.save(noti);
+    return modelMapper.map(saved, NotificationDTO.class);
+  }
+
+  @Override
+  @Transactional
+  public List<NotificationDTO> createBulk(List<UUID> userIds, String title, String message, NotificationType type, UUID relatedEntityId, String relatedEntityType, CustomUserDetails actor) {
+    // Validate đầu vào
+    if (userIds == null || userIds.isEmpty()) {
+      throw new AppException(HttpStatus.BAD_REQUEST, "Danh sách user IDs không được rỗng");
+    }
+    if (title == null || title.trim().isEmpty()) {
+      throw new AppException(HttpStatus.BAD_REQUEST, "Tiêu đề không được rỗng");
+    }
+    if (message == null || message.trim().isEmpty()) {
+      throw new AppException(HttpStatus.BAD_REQUEST, "Nội dung thông báo không được rỗng");
+    }
+
+    // Kiểm tra user tồn tại (chỉ lấy những user valid)
+    List<User> validUsers = userRepository.findAllById(userIds);
+    if (validUsers.isEmpty()) {
+      throw new AppException(HttpStatus.BAD_REQUEST, "Không tìm thấy user nào trong danh sách");
+    }
+
+    // Tạo notifications cho từng user
+    List<Notification> notifications = validUsers.stream()
+        .map(user ->
+            Notification.builder()
+                .user(user)
+                .type(type)
+                .title(title)
+                .message(message)
+                .relatedEntityId(relatedEntityId)
+                .relatedEntityType(relatedEntityType)
+                .readStatus(NotificationReadStatus.UNREAD)
+                .notificationStatus(NotificationStatus.PENDING)
+                .build())
+        .toList();
+
+    // Lưu tất cả
+    List<Notification> savedNotifications = notificationRepository.saveAll(notifications);
+
+    // Convert sang DTO
+    return savedNotifications.stream()
+        .map(noti -> modelMapper.map(noti, NotificationDTO.class))
+        .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<NotificationDTO> findAllAllNotifications(CustomUserDetails actor, Pageable pageable) {
+    // Kiểm tra quyền ADMIN hoặc MANAGER
+    if (actor.getRole() != UserRole.ADMIN && actor.getRole() != UserRole.MANAGER) {
+      throw new AppException(HttpStatus.FORBIDDEN, "Không có quyền truy cập");
+    }
+
+    return notificationRepository.findAll(pageable)
+        .map(noti -> modelMapper.map(noti, NotificationDTO.class));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<NotificationDTO> findAllByUserId(UUID userId, CustomUserDetails actor, Pageable pageable) {
+    // Kiểm tra quyền ADMIN hoặc MANAGER
+    if (actor.getRole() != UserRole.ADMIN && actor.getRole() != UserRole.MANAGER) {
+      throw new AppException(HttpStatus.FORBIDDEN, "Không có quyền truy cập");
+    }
+
+    return notificationRepository.findByUser_Id(userId, pageable)
+        .map(noti -> modelMapper.map(noti, NotificationDTO.class));
   }
 }

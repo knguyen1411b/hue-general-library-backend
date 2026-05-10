@@ -25,6 +25,8 @@ public interface RentalRepository extends JpaRepository<Rental, UUID> {
 
   List<Rental> findByStatusAndDueDateBefore(RentalStatus status, LocalDate time);
 
-  @Query("SELECT r FROM Rental r WHERE r.status = org.app.backend.modules.rental.enums.RentalStatus.BORROWING AND r.dueDate BETWEEN :startDate AND :endDate")
-  List<Rental> findBorrowingRentalsWithDueDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+  @Query(
+      "SELECT r FROM Rental r WHERE r.status = org.app.backend.modules.rental.enums.RentalStatus.BORROWING AND r.dueDate BETWEEN :startDate AND :endDate")
+  List<Rental> findBorrowingRentalsWithDueDateBetween(
+      @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

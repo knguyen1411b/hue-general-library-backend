@@ -2,19 +2,14 @@ package org.app.backend.modules.notification;
 
 import jakarta.persistence.*;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
 import org.app.backend.modules.notification.enums.NotificationReadStatus;
 import org.app.backend.modules.notification.enums.NotificationStatus;
 import org.app.backend.modules.notification.enums.NotificationType;
 import org.app.backend.modules.user.User;
-import org.app.backend.modules.user.UserRole;
-import org.app.backend.modules.user.UserStatus;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity

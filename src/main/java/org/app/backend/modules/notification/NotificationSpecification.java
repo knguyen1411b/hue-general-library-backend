@@ -4,8 +4,6 @@ import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 import org.app.backend.modules.notification.dto.NotificationFilterDTO;
-import org.app.backend.modules.notification.enums.NotificationReadStatus;
-import org.app.backend.modules.notification.enums.NotificationType;
 import org.springframework.data.jpa.domain.Specification;
 
 public class NotificationSpecification {
