@@ -47,7 +47,7 @@ public class LibraryCardV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','USER')")
   public PagedApiResponse<LibraryCardDTO> index(
       @RequestParam(required = false) UUID userId,
       @RequestParam(required = false) CardStatus status,
@@ -128,7 +128,7 @@ public class LibraryCardV1Controller {
   @BadRequestApiResponse
   @NotFoundApiResponse
   @PatchMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse update(
       @PathVariable UUID id,
       @Valid @RequestBody LibraryCardUpdateDTO dto,
@@ -152,7 +152,7 @@ public class LibraryCardV1Controller {
   @ForbiddenApiResponse
   @NotFoundApiResponse
   @PostMapping("/{id}/lock")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public DataApiResponse<LibraryCardDTO> lock(
       @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
     return DataApiResponse.success(libraryCardService.lock(id, actor), "Khóa thẻ thành công");
@@ -173,7 +173,7 @@ public class LibraryCardV1Controller {
   @ForbiddenApiResponse
   @NotFoundApiResponse
   @PostMapping("/{id}/replace")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public DataApiResponse<LibraryCardDTO> replace(
       @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
     return DataApiResponse.success(libraryCardService.replace(id, actor), "Làm lại thẻ thành công");
@@ -194,7 +194,7 @@ public class LibraryCardV1Controller {
   @ForbiddenApiResponse
   @NotFoundApiResponse
   @DeleteMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse delete(
       @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
     libraryCardService.delete(id, actor);
