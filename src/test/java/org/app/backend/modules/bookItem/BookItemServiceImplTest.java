@@ -87,7 +87,8 @@ class BookItemServiceImplTest {
   void testFindById_NotFound() {
     when(bookItemRepository.findById(bookItemId)).thenReturn(Optional.empty());
 
-    AppException exception = assertThrows(AppException.class, () -> bookItemService.findById(bookItemId));
+    AppException exception =
+        assertThrows(AppException.class, () -> bookItemService.findById(bookItemId));
     assertEquals(BookItemMessage.NOT_FOUND.getMessage(), exception.getMessage());
   }
 
@@ -107,26 +108,29 @@ class BookItemServiceImplTest {
 
     when(bookRepository.findById(bookId)).thenReturn(Optional.of(mockBook));
     when(bookItemRepository.existsByBarcode(dto.getBarcode())).thenReturn(false);
-    when(positionRepository.findById(dto.getShelfPositionId())).thenReturn(Optional.of(mockPosition));
+    when(positionRepository.findById(dto.getShelfPositionId()))
+        .thenReturn(Optional.of(mockPosition));
 
-    when(bookItemRepository.save(any(BookItem.class))).thenAnswer(invocation -> {
-      BookItem item = invocation.getArgument(0);
-      item.setId(UUID.randomUUID());
-      return item;
-    });
+    when(bookItemRepository.save(any(BookItem.class)))
+        .thenAnswer(
+            invocation -> {
+              BookItem item = invocation.getArgument(0);
+              item.setId(UUID.randomUUID());
+              return item;
+            });
 
     bookItemService.create(dto, mockUserDetails);
 
     verify(bookItemRepository, times(1)).save(any(BookItem.class));
-    verify(auditLogService, times(1)).log(
-        eq(mockUserDetails.getId()),
-        eq(mockUserDetails.getUsername()),
-        eq(AuditLogAction.CREATE),
-        eq(AuditLogEntity.BOOK_ITEM),
-        anyString(), // Now it has an ID because of the mock
-        eq(AuditLogStatus.SUCCESS),
-        anyString()
-    );
+    verify(auditLogService, times(1))
+        .log(
+            eq(mockUserDetails.getId()),
+            eq(mockUserDetails.getUsername()),
+            eq(AuditLogAction.CREATE),
+            eq(AuditLogEntity.BOOK_ITEM),
+            anyString(), // Now it has an ID because of the mock
+            eq(AuditLogStatus.SUCCESS),
+            anyString());
   }
 
   @Test

@@ -1,7 +1,6 @@
 package org.app.backend.modules.payment;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
@@ -62,8 +61,8 @@ class PaymentServiceImplTest {
   void testFindById_NotFound() {
     when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
 
-    RuntimeException ex = assertThrows(RuntimeException.class,
-        () -> paymentService.findById(paymentId));
+    RuntimeException ex =
+        assertThrows(RuntimeException.class, () -> paymentService.findById(paymentId));
     assertEquals("Payment not found", ex.getMessage());
   }
 

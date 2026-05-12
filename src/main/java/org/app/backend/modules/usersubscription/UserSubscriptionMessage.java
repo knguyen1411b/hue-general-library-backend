@@ -24,6 +24,7 @@ public enum UserSubscriptionMessage {
   MAX_BOOKS_EXCEEDED("Vượt quá số lượng sách được mượn tối đa"),
   SUBSCRIPTION_EXPIRED("Đăng ký gói đã hết hạn"),
   SUBSCRIPTION_CANCELED("Đăng ký gói đã bị hủy"),
+  USER_ALREADY_HAS_ACTIVE("Người dùng đã có đăng ký gói hoạt động"),
 
   VALIDATION_START_DATE_REQUIRED("Ngày bắt đầu không được để trống"),
   VALIDATION_END_DATE_REQUIRED("Ngày kết thúc không được để trống"),

@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -73,12 +72,23 @@ public class ApplicationConfig {
 
     // Custom mapping for Notification -> NotificationDTO
     // Map user.id to userId
-    Converter<User, UUID> userToIdConverter = ctx -> ctx.getSource() == null ? null : ctx.getSource().getId();
-    Converter<NotificationReadStatus, String> enumToStringConverter = ctx -> ctx.getSource() == null ? null : ctx.getSource().name();
+    Converter<User, UUID> userToIdConverter =
+        ctx -> ctx.getSource() == null ? null : ctx.getSource().getId();
+    Converter<NotificationReadStatus, String> enumToStringConverter =
+        ctx -> ctx.getSource() == null ? null : ctx.getSource().name();
 
-    modelMapper.typeMap(Notification.class, NotificationDTO.class)
-        .addMappings(mapper -> mapper.using(userToIdConverter).map(Notification::getUser, NotificationDTO::setUserId))
-        .addMappings(mapper -> mapper.using(enumToStringConverter).map(Notification::getReadStatus, NotificationDTO::setReadStatus));
+    modelMapper
+        .typeMap(Notification.class, NotificationDTO.class)
+        .addMappings(
+            mapper ->
+                mapper
+                    .using(userToIdConverter)
+                    .map(Notification::getUser, NotificationDTO::setUserId))
+        .addMappings(
+            mapper ->
+                mapper
+                    .using(enumToStringConverter)
+                    .map(Notification::getReadStatus, NotificationDTO::setReadStatus));
 
     return modelMapper;
   }

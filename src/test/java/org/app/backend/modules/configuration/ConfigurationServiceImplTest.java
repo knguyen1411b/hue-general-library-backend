@@ -1,9 +1,6 @@
 package org.app.backend.modules.configuration;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
@@ -79,7 +76,9 @@ class ConfigurationServiceImplTest {
 
     when(configurationRepository.findByConfigKey("UNKNOWN_KEY")).thenReturn(Optional.empty());
 
-    AppException exception = assertThrows(AppException.class, () -> configurationService.updateConfiguration("UNKNOWN_KEY", dto));
+    AppException exception =
+        assertThrows(
+            AppException.class, () -> configurationService.updateConfiguration("UNKNOWN_KEY", dto));
     assertEquals(ConfigurationMessage.CONFIG_NOT_FOUND.getMessage(), exception.getMessage());
   }
 }

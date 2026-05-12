@@ -169,7 +169,14 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   @Transactional
-  public List<NotificationDTO> createBulk(List<UUID> userIds, String title, String message, NotificationType type, UUID relatedEntityId, String relatedEntityType, CustomUserDetails actor) {
+  public List<NotificationDTO> createBulk(
+      List<UUID> userIds,
+      String title,
+      String message,
+      NotificationType type,
+      UUID relatedEntityId,
+      String relatedEntityType,
+      CustomUserDetails actor) {
     // Validate đầu vào
     if (userIds == null || userIds.isEmpty()) {
       throw new AppException(HttpStatus.BAD_REQUEST, "Danh sách user IDs không được rỗng");
@@ -188,19 +195,21 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     // Tạo notifications cho từng user
-    List<Notification> notifications = validUsers.stream()
-        .map(user ->
-            Notification.builder()
-                .user(user)
-                .type(type)
-                .title(title)
-                .message(message)
-                .relatedEntityId(relatedEntityId)
-                .relatedEntityType(relatedEntityType)
-                .readStatus(NotificationReadStatus.UNREAD)
-                .notificationStatus(NotificationStatus.PENDING)
-                .build())
-        .toList();
+    List<Notification> notifications =
+        validUsers.stream()
+            .map(
+                user ->
+                    Notification.builder()
+                        .user(user)
+                        .type(type)
+                        .title(title)
+                        .message(message)
+                        .relatedEntityId(relatedEntityId)
+                        .relatedEntityType(relatedEntityType)
+                        .readStatus(NotificationReadStatus.UNREAD)
+                        .notificationStatus(NotificationStatus.PENDING)
+                        .build())
+            .toList();
 
     // Lưu tất cả
     List<Notification> savedNotifications = notificationRepository.saveAll(notifications);
@@ -219,19 +228,22 @@ public class NotificationServiceImpl implements NotificationService {
       throw new AppException(HttpStatus.FORBIDDEN, "Không có quyền truy cập");
     }
 
-    return notificationRepository.findAll(pageable)
+    return notificationRepository
+        .findAll(pageable)
         .map(noti -> modelMapper.map(noti, NotificationDTO.class));
   }
 
   @Override
   @Transactional(readOnly = true)
-  public Page<NotificationDTO> findAllByUserId(UUID userId, CustomUserDetails actor, Pageable pageable) {
+  public Page<NotificationDTO> findAllByUserId(
+      UUID userId, CustomUserDetails actor, Pageable pageable) {
     // Kiểm tra quyền ADMIN hoặc MANAGER
     if (actor.getRole() != UserRole.ADMIN && actor.getRole() != UserRole.MANAGER) {
       throw new AppException(HttpStatus.FORBIDDEN, "Không có quyền truy cập");
     }
 
-    return notificationRepository.findByUser_Id(userId, pageable)
+    return notificationRepository
+        .findByUser_Id(userId, pageable)
         .map(noti -> modelMapper.map(noti, NotificationDTO.class));
   }
 }

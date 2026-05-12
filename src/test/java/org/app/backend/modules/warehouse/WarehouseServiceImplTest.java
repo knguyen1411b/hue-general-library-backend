@@ -3,7 +3,6 @@ package org.app.backend.modules.warehouse;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
@@ -17,7 +16,6 @@ import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
 import org.app.backend.modules.warehouse.dto.FloorDTO;
 import org.app.backend.modules.warehouse.entity.Aisle;
 import org.app.backend.modules.warehouse.entity.Floor;
-import org.app.backend.modules.warehouse.entity.Shelf;
 import org.app.backend.modules.warehouse.repository.AisleRepository;
 import org.app.backend.modules.warehouse.repository.FloorRepository;
 import org.app.backend.modules.warehouse.repository.ShelfRepository;
@@ -142,11 +140,13 @@ class WarehouseServiceImplTest {
 
     when(floorRepository.findById(floorId)).thenReturn(Optional.of(mockFloor));
     when(aisleRepository.existsByFloorIdAndNameIgnoreCase(floorId, "Aisle B")).thenReturn(false);
-    when(aisleRepository.save(any(Aisle.class))).thenAnswer(inv -> {
-      Aisle a = inv.getArgument(0);
-      a.setId(UUID.randomUUID());
-      return a;
-    });
+    when(aisleRepository.save(any(Aisle.class)))
+        .thenAnswer(
+            inv -> {
+              Aisle a = inv.getArgument(0);
+              a.setId(UUID.randomUUID());
+              return a;
+            });
 
     AisleDTO result = warehouseService.createAisle(dto, mockActor);
 

@@ -45,11 +45,12 @@ class NotificationServiceImplTest {
     notificationId = UUID.randomUUID();
     userId = UUID.randomUUID();
 
-    mockNotification = Notification.builder()
-        .id(notificationId)
-        .readStatus(NotificationReadStatus.UNREAD)
-        .notificationStatus(NotificationStatus.PENDING)
-        .build();
+    mockNotification =
+        Notification.builder()
+            .id(notificationId)
+            .readStatus(NotificationReadStatus.UNREAD)
+            .notificationStatus(NotificationStatus.PENDING)
+            .build();
 
     mockUser = new CustomUserDetails();
     mockUser.setId(userId);
@@ -98,9 +99,7 @@ class NotificationServiceImplTest {
   @Test
   @DisplayName("Mark All As Read - Marks all unread notifications as read")
   void testMarkAllAsRead_Success() {
-    Notification noti2 = Notification.builder()
-        .readStatus(NotificationReadStatus.UNREAD)
-        .build();
+    Notification noti2 = Notification.builder().readStatus(NotificationReadStatus.UNREAD).build();
 
     when(notificationRepository.findByUser_IdAndReadStatus(userId, NotificationReadStatus.UNREAD))
         .thenReturn(List.of(mockNotification, noti2));
@@ -147,8 +146,14 @@ class NotificationServiceImplTest {
     when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
     when(modelMapper.map(savedNotification, NotificationDTO.class)).thenReturn(resultDto);
 
-    NotificationDTO result = notificationService.createReminderNotification(
-        userId, NotificationType.RENTAL_DUE_REMINDER, "Title", "Message", UUID.randomUUID(), "RENTAL");
+    NotificationDTO result =
+        notificationService.createReminderNotification(
+            userId,
+            NotificationType.RENTAL_DUE_REMINDER,
+            "Title",
+            "Message",
+            UUID.randomUUID(),
+            "RENTAL");
 
     assertNotNull(result);
     verify(notificationRepository, times(1)).save(any(Notification.class));
@@ -157,8 +162,16 @@ class NotificationServiceImplTest {
   @Test
   @DisplayName("Create Bulk Notifications - Empty user list throws exception")
   void testCreateBulk_EmptyUserIds_ThrowsException() {
-    assertThrows(AppException.class, () ->
-        notificationService.createBulk(List.of(), "Title", "Message",
-            NotificationType.RENTAL_DUE_REMINDER, UUID.randomUUID(), "RENTAL", mockUser));
+    assertThrows(
+        AppException.class,
+        () ->
+            notificationService.createBulk(
+                List.of(),
+                "Title",
+                "Message",
+                NotificationType.RENTAL_DUE_REMINDER,
+                UUID.randomUUID(),
+                "RENTAL",
+                mockUser));
   }
 }

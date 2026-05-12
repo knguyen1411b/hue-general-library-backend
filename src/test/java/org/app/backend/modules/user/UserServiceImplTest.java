@@ -117,22 +117,22 @@ class UserServiceImplTest {
     when(userRepository.existsByUsername(dto.getUsername())).thenReturn(false);
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);
     when(userRepository.existsByIdentityNumber(dto.getIdentityNumber())).thenReturn(false);
-    
+
     when(modelMapper.map(dto, User.class)).thenReturn(mappedUser);
     when(passwordEncoder.encode(dto.getPassword())).thenReturn("encodedPassword");
 
     userService.create(dto, mockUserDetails);
 
     verify(userRepository, times(2)).save(mappedUser); // Saved twice in create()
-    verify(auditLogService, times(1)).log(
-        eq(mockUserDetails.getId()),
-        eq(mockUserDetails.getUsername()),
-        eq(AuditLogAction.CREATE),
-        eq(AuditLogEntity.USER),
-        anyString(),
-        eq(AuditLogStatus.SUCCESS),
-        anyString()
-    );
+    verify(auditLogService, times(1))
+        .log(
+            eq(mockUserDetails.getId()),
+            eq(mockUserDetails.getUsername()),
+            eq(AuditLogAction.CREATE),
+            eq(AuditLogEntity.USER),
+            anyString(),
+            eq(AuditLogStatus.SUCCESS),
+            anyString());
   }
 
   @Test
@@ -143,7 +143,8 @@ class UserServiceImplTest {
 
     when(userRepository.existsByUsername(dto.getUsername())).thenReturn(true);
 
-    AppException exception = assertThrows(AppException.class, () -> userService.create(dto, mockUserDetails));
+    AppException exception =
+        assertThrows(AppException.class, () -> userService.create(dto, mockUserDetails));
     assertEquals(UserMessage.USERNAME_TAKEN.getMessage(), exception.getMessage());
     verify(userRepository, never()).save(any());
   }
@@ -157,14 +158,14 @@ class UserServiceImplTest {
 
     assertEquals(UserStatus.DELETED, mockUser.getStatus());
     verify(userRepository, times(1)).save(mockUser);
-    verify(auditLogService, times(1)).log(
-        eq(mockUserDetails.getId()),
-        eq(mockUserDetails.getUsername()),
-        eq(AuditLogAction.DELETE),
-        eq(AuditLogEntity.USER),
-        eq(userId.toString()),
-        eq(AuditLogStatus.SUCCESS),
-        anyString()
-    );
+    verify(auditLogService, times(1))
+        .log(
+            eq(mockUserDetails.getId()),
+            eq(mockUserDetails.getUsername()),
+            eq(AuditLogAction.DELETE),
+            eq(AuditLogEntity.USER),
+            eq(userId.toString()),
+            eq(AuditLogStatus.SUCCESS),
+            anyString());
   }
 }
