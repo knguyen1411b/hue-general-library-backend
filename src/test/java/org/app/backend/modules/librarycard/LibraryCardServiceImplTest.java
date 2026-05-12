@@ -9,7 +9,6 @@ import java.util.UUID;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.librarycard.dto.LibraryCardCreateDTO;
 import org.app.backend.modules.librarycard.dto.LibraryCardDTO;
-import org.app.backend.modules.librarycard.dto.LibraryCardUpdateDTO;
 import org.app.backend.modules.librarycardrequest.LibraryCardRequestRepository;
 import org.app.backend.modules.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,8 +66,8 @@ class LibraryCardServiceImplTest {
   void testFindById_NotFound() {
     when(libraryCardRepository.findById(cardId)).thenReturn(Optional.empty());
 
-    RuntimeException ex = assertThrows(RuntimeException.class,
-        () -> libraryCardService.findById(cardId));
+    RuntimeException ex =
+        assertThrows(RuntimeException.class, () -> libraryCardService.findById(cardId));
     assertEquals("Library card not found", ex.getMessage());
   }
 

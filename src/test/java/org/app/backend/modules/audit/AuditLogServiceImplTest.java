@@ -1,7 +1,6 @@
 package org.app.backend.modules.audit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,18 +36,19 @@ class AuditLogServiceImplTest {
   @BeforeEach
   void setUp() {
     auditId = UUID.randomUUID();
-    mockAuditLog = AuditLog.builder()
-        .id(auditId)
-        .userId(UUID.randomUUID())
-        .username("testuser")
-        .action(AuditLogAction.LOGIN)
-        .entityName(AuditLogEntity.AUTH)
-        .entityId(auditId.toString())
-        .status(AuditLogStatus.SUCCESS)
-        .message("Đăng nhập thành công")
-        .ipAddress("127.0.0.1")
-        .userAgent("Mozilla")
-        .build();
+    mockAuditLog =
+        AuditLog.builder()
+            .id(auditId)
+            .userId(UUID.randomUUID())
+            .username("testuser")
+            .action(AuditLogAction.LOGIN)
+            .entityName(AuditLogEntity.AUTH)
+            .entityId(auditId.toString())
+            .status(AuditLogStatus.SUCCESS)
+            .message("Đăng nhập thành công")
+            .ipAddress("127.0.0.1")
+            .userAgent("Mozilla")
+            .build();
   }
 
   @Test
@@ -57,17 +57,24 @@ class AuditLogServiceImplTest {
     // Arrange
     UUID userId = UUID.randomUUID();
     String username = "testuser";
-    
+
     when(request.getHeader("X-Forwarded-For")).thenReturn("192.168.1.1, 10.0.0.1");
     when(request.getHeader("User-Agent")).thenReturn("Chrome");
 
     // Act
-    auditLogService.log(userId, username, AuditLogAction.LOGIN, AuditLogEntity.AUTH, "entity-id", AuditLogStatus.SUCCESS, "Success");
+    auditLogService.log(
+        userId,
+        username,
+        AuditLogAction.LOGIN,
+        AuditLogEntity.AUTH,
+        "entity-id",
+        AuditLogStatus.SUCCESS,
+        "Success");
 
     // Assert
     ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
     verify(auditLogRepository, times(1)).save(captor.capture());
-    
+
     AuditLog savedLog = captor.getValue();
     assertEquals(userId, savedLog.getUserId());
     assertEquals("testuser", savedLog.getUsername());
@@ -85,12 +92,19 @@ class AuditLogServiceImplTest {
     when(request.getHeader("User-Agent")).thenReturn("Firefox");
 
     // Act
-    auditLogService.log(null, "anonymous", AuditLogAction.LOGIN, AuditLogEntity.AUTH, null, AuditLogStatus.FAILED, "Failed");
+    auditLogService.log(
+        null,
+        "anonymous",
+        AuditLogAction.LOGIN,
+        AuditLogEntity.AUTH,
+        null,
+        AuditLogStatus.FAILED,
+        "Failed");
 
     // Assert
     ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
     verify(auditLogRepository, times(1)).save(captor.capture());
-    
+
     AuditLog savedLog = captor.getValue();
     assertNull(savedLog.getUserId());
     assertEquals("anonymous", savedLog.getUsername());
@@ -125,7 +139,8 @@ class AuditLogServiceImplTest {
     when(auditLogRepository.findById(auditId)).thenReturn(Optional.empty());
 
     // Act & Assert
-    AppException exception = assertThrows(AppException.class, () -> auditLogService.findById(auditId));
+    AppException exception =
+        assertThrows(AppException.class, () -> auditLogService.findById(auditId));
     assertEquals(AuditLogMessage.NOT_FOUND.getMessage(), exception.getMessage());
   }
 }

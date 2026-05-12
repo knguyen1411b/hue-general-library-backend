@@ -1,12 +1,12 @@
 package org.app.backend.modules.notification.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.notification.enums.NotificationType;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 @Builder
@@ -16,8 +16,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "DTO để tạo thông báo mới cho một user")
 public class NotificationCreateDTO {
   @NotNull(message = "ID người dùng không được để trống")
-  @Schema(description = "ID của user nhận thông báo", 
-          example = "550e8400-e29b-41d4-a716-446655440000")
+  @Schema(
+      description = "ID của user nhận thông báo",
+      example = "550e8400-e29b-41d4-a716-446655440000")
   UUID userId;
 
   @NotNull(message = "Loại thông báo không được để trống")
@@ -32,8 +33,9 @@ public class NotificationCreateDTO {
   @Schema(description = "Nội dung thông báo", example = "Bạn có một thông báo mới từ hệ thống")
   String message;
 
-  @Schema(description = "ID thực thể liên quan (có thể null)", 
-          example = "550e8400-e29b-41d4-a716-446655440002")
+  @Schema(
+      description = "ID thực thể liên quan (có thể null)",
+      example = "550e8400-e29b-41d4-a716-446655440002")
   UUID relatedEntityId;
 
   @Schema(description = "Kiểu thực thể liên quan (có thể null)", example = "BOOK")

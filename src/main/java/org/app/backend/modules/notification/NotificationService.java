@@ -37,7 +37,14 @@ public interface NotificationService {
   NotificationDTO create(NotificationCreateDTO dto, CustomUserDetails actor);
 
   // Admin/Manager tạo thông báo bulk cho list user IDs
-  List<NotificationDTO> createBulk(List<UUID> userIds, String title, String message, NotificationType type, UUID relatedEntityId, String relatedEntityType, CustomUserDetails actor);
+  List<NotificationDTO> createBulk(
+      List<UUID> userIds,
+      String title,
+      String message,
+      NotificationType type,
+      UUID relatedEntityId,
+      String relatedEntityType,
+      CustomUserDetails actor);
 
   // Admin/Manager xem tất cả thông báo trong hệ thống (không lọc theo user)
   Page<NotificationDTO> findAllAllNotifications(CustomUserDetails actor, Pageable pageable);

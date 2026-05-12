@@ -108,36 +108,38 @@ class BookServiceImplTest {
 
     when(bookRepository.existsByIsbn(dto.getIsbn())).thenReturn(false);
     when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(mockCategory));
-    
+
     when(modelMapper.typeMap(BookCreateDTO.class, Book.class)).thenReturn(typeMap);
     when(typeMap.addMappings(any(org.modelmapper.ExpressionMap.class))).thenReturn(typeMap);
-    
+
     Book mappedBook = new Book();
     mappedBook.setId(UUID.randomUUID()); // To be set to null in service
     mappedBook.setTitle("New Book");
     when(modelMapper.map(dto, Book.class)).thenReturn(mappedBook);
-    
+
     when(bookItemRepository.existsByBarcode(anyString())).thenReturn(false);
 
-    when(bookRepository.save(any(Book.class))).thenAnswer(invocation -> {
-      Book b = invocation.getArgument(0);
-      b.setId(UUID.randomUUID());
-      return b;
-    });
+    when(bookRepository.save(any(Book.class)))
+        .thenAnswer(
+            invocation -> {
+              Book b = invocation.getArgument(0);
+              b.setId(UUID.randomUUID());
+              return b;
+            });
 
     bookService.create(dto, mockUserDetails);
 
     verify(bookRepository, times(1)).save(mappedBook);
     verify(bookItemRepository, times(1)).save(any(BookItem.class));
-    verify(auditLogService, times(1)).log(
-        eq(mockUserDetails.getId()),
-        eq(mockUserDetails.getUsername()),
-        eq(AuditLogAction.CREATE),
-        eq(AuditLogEntity.BOOK),
-        anyString(),
-        eq(AuditLogStatus.SUCCESS),
-        anyString()
-    );
+    verify(auditLogService, times(1))
+        .log(
+            eq(mockUserDetails.getId()),
+            eq(mockUserDetails.getUsername()),
+            eq(AuditLogAction.CREATE),
+            eq(AuditLogEntity.BOOK),
+            anyString(),
+            eq(AuditLogStatus.SUCCESS),
+            anyString());
     assertNotNull(mappedBook.getId());
     assertEquals(BookStatus.ACTIVE, mappedBook.getStatus());
   }

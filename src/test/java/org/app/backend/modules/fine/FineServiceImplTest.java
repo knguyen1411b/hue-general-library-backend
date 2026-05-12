@@ -1,14 +1,10 @@
 package org.app.backend.modules.fine;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.UUID;
-import org.app.backend.common.exception.AppException;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.fine.dto.FineDTO;
 import org.app.backend.modules.fine.enums.FineStatus;
@@ -78,7 +74,8 @@ class FineServiceImplTest {
   void testPayFine_NotFound() {
     when(fineRepository.findById(fineId)).thenReturn(Optional.empty());
 
-    RuntimeException exception = assertThrows(RuntimeException.class, () -> fineService.pay(fineId, mockUserDetails));
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> fineService.pay(fineId, mockUserDetails));
     assertEquals("Fine not found", exception.getMessage());
   }
 }

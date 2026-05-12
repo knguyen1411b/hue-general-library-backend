@@ -25,10 +25,11 @@ class LibraryCardRequestServiceImplTest {
 
   @BeforeEach
   void setUp() {
-    mockRequest = LibraryCardRequest.builder()
-        .status(LibraryCardRequestStatus.PENDING)
-        .deliveryAddress("123 Main St")
-        .build();
+    mockRequest =
+        LibraryCardRequest.builder()
+            .status(LibraryCardRequestStatus.PENDING)
+            .deliveryAddress("123 Main St")
+            .build();
   }
 
   @Test

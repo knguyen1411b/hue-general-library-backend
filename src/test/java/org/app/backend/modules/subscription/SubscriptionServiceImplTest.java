@@ -94,10 +94,15 @@ class SubscriptionServiceImplTest {
 
     assertEquals("PREMIUM", mappedSub.getKey());
     verify(subscriptionRepository, times(1)).save(mappedSub);
-    verify(auditLogService, times(1)).log(
-        eq(mockActor.getId()), eq(mockActor.getUsername()),
-        eq(AuditLogAction.CREATE), eq(AuditLogEntity.SUBSCRIPTION),
-        anyString(), eq(AuditLogStatus.SUCCESS), anyString());
+    verify(auditLogService, times(1))
+        .log(
+            eq(mockActor.getId()),
+            eq(mockActor.getUsername()),
+            eq(AuditLogAction.CREATE),
+            eq(AuditLogEntity.SUBSCRIPTION),
+            anyString(),
+            eq(AuditLogStatus.SUCCESS),
+            anyString());
   }
 
   @Test

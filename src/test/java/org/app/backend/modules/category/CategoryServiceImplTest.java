@@ -1,14 +1,12 @@
 package org.app.backend.modules.category;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.UUID;
-import org.app.backend.common.exception.AppException;
 import org.app.backend.core.file.FileService;
 import org.app.backend.modules.audit.AuditLogService;
 import org.app.backend.modules.audit.enums.AuditLogAction;
@@ -85,15 +83,15 @@ class CategoryServiceImplTest {
     categoryService.create(dto, mockUserDetails);
 
     verify(categoryRepository, times(1)).save(mappedCategory);
-    verify(auditLogService, times(1)).log(
-        eq(mockUserDetails.getId()),
-        eq(mockUserDetails.getUsername()),
-        eq(AuditLogAction.CREATE),
-        eq(AuditLogEntity.CATEGORY),
-        anyString(),
-        eq(AuditLogStatus.SUCCESS),
-        anyString()
-    );
+    verify(auditLogService, times(1))
+        .log(
+            eq(mockUserDetails.getId()),
+            eq(mockUserDetails.getUsername()),
+            eq(AuditLogAction.CREATE),
+            eq(AuditLogEntity.CATEGORY),
+            anyString(),
+            eq(AuditLogStatus.SUCCESS),
+            anyString());
   }
 
   @Test

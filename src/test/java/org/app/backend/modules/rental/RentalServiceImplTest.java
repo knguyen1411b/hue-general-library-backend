@@ -1,12 +1,9 @@
 package org.app.backend.modules.rental;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.app.backend.modules.auth.security.CustomUserDetails;
@@ -93,8 +90,8 @@ class RentalServiceImplTest {
     when(userSubscriptionRepository.findActiveSubscriptionByUserId(userId))
         .thenReturn(Optional.empty());
 
-    RuntimeException ex = assertThrows(RuntimeException.class,
-        () -> rentalService.create(dto, mockActor));
+    RuntimeException ex =
+        assertThrows(RuntimeException.class, () -> rentalService.create(dto, mockActor));
     assertTrue(ex.getMessage().contains("gói cước"));
   }
 
@@ -112,11 +109,10 @@ class RentalServiceImplTest {
 
     when(userSubscriptionRepository.findActiveSubscriptionByUserId(userId))
         .thenReturn(Optional.of(activeSub));
-    when(fineRepository.existsByRental_UserIdAndStatus(userId, FineStatus.UNPAID))
-        .thenReturn(true);
+    when(fineRepository.existsByRental_UserIdAndStatus(userId, FineStatus.UNPAID)).thenReturn(true);
 
-    RuntimeException ex = assertThrows(RuntimeException.class,
-        () -> rentalService.create(dto, mockActor));
+    RuntimeException ex =
+        assertThrows(RuntimeException.class, () -> rentalService.create(dto, mockActor));
     assertTrue(ex.getMessage().contains("nợ phí phạt"));
   }
 

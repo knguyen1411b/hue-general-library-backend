@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
 import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -143,8 +142,7 @@ public class NotificationV1Controller {
               content =
                   @Content(
                       mediaType = MediaType.APPLICATION_JSON_VALUE,
-                      schema = @Schema(implementation = NotificationCreateDTO.class)
-                    )),
+                      schema = @Schema(implementation = NotificationCreateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "201",
@@ -159,7 +157,8 @@ public class NotificationV1Controller {
   @PostMapping
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public DataApiResponse<NotificationDTO> create(
-      @Valid @RequestBody NotificationCreateDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
+      @Valid @RequestBody NotificationCreateDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
     return DataApiResponse.success(
         notificationService.create(dto, actor), "Tạo thông báo thành công");
   }
@@ -187,15 +186,17 @@ public class NotificationV1Controller {
   @PostMapping("/bulk")
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public DataApiResponse<List<NotificationDTO>> createBulk(
-      @Valid @RequestBody NotificationBulkDTO dto, @AuthenticationPrincipal CustomUserDetails actor) {
-    List<NotificationDTO> notifications = notificationService.createBulk(
-        dto.getUserIds(),
-        dto.getTitle(),
-        dto.getMessage(),
-        dto.getType(),
-        dto.getRelatedEntityId(),
-        dto.getRelatedEntityType(),
-        actor);
+      @Valid @RequestBody NotificationBulkDTO dto,
+      @AuthenticationPrincipal CustomUserDetails actor) {
+    List<NotificationDTO> notifications =
+        notificationService.createBulk(
+            dto.getUserIds(),
+            dto.getTitle(),
+            dto.getMessage(),
+            dto.getType(),
+            dto.getRelatedEntityId(),
+            dto.getRelatedEntityType(),
+            actor);
     return DataApiResponse.success(notifications, "Tạo thông báo bulk thành công");
   }
 
@@ -243,7 +244,12 @@ public class NotificationV1Controller {
 
   @Operation(
       summary = "Admin/Manager: Lấy tất cả thông báo của một user cụ thể (có phân trang)",
-      parameters = {@Parameter(name = "userId", description = "ID người dùng cần xem thông báo", required = true)},
+      parameters = {
+        @Parameter(
+            name = "userId",
+            description = "ID người dùng cần xem thông báo",
+            required = true)
+      },
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -272,7 +278,6 @@ public class NotificationV1Controller {
   public static class DataApiResponseNotificationStatsDTO
       extends DataApiResponse<NotificationStatsDTO> {}
 
-  public static class DataApiResponseListNotificationDTO extends DataApiResponse<List<NotificationDTO>> {}
+  public static class DataApiResponseListNotificationDTO
+      extends DataApiResponse<List<NotificationDTO>> {}
 }
-
-  
