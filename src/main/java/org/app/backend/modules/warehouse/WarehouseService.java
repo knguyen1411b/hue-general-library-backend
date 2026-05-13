@@ -11,11 +11,9 @@ import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
 import org.app.backend.modules.warehouse.dto.FloorDTO;
 import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
 import org.app.backend.modules.warehouse.dto.ShelfDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.app.backend.modules.warehouse.dto.SimpleFloorDTO;
 
 public interface WarehouseService {
-  Page<FloorDTO> getWarehouseTree(Pageable pageable);
 
   FloorDTO createFloor(FloorCreateDTO dto, CustomUserDetails actor);
 
@@ -25,7 +23,9 @@ public interface WarehouseService {
 
   FloorDTO getFloorById(UUID id);
 
-  List<FloorDTO> getAllFloors();
+  List<SimpleFloorDTO> getAllFloors();
+
+  List<FloorDTO> getWarehouseTree();
 
   AisleDTO createAisle(AisleCreateDTO dto, CustomUserDetails actor);
 

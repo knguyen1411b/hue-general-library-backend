@@ -1,7 +1,10 @@
 package org.app.backend.modules.warehouse;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,6 +22,7 @@ import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
 import org.app.backend.modules.warehouse.dto.FloorDTO;
 import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
 import org.app.backend.modules.warehouse.dto.ShelfDTO;
+import org.app.backend.modules.warehouse.dto.SimpleFloorDTO;
 import org.app.backend.modules.warehouse.entity.Aisle;
 import org.app.backend.modules.warehouse.entity.Floor;
 import org.app.backend.modules.warehouse.entity.Shelf;
@@ -26,8 +30,7 @@ import org.app.backend.modules.warehouse.repository.AisleRepository;
 import org.app.backend.modules.warehouse.repository.FloorRepository;
 import org.app.backend.modules.warehouse.repository.ShelfRepository;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -46,8 +49,46 @@ public class WarehouseServiceImpl implements WarehouseService {
   @Override
   @Transactional(readOnly = true)
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-  public Page<FloorDTO> getWarehouseTree(Pageable pageable) {
-    return floorRepository.findAll(pageable).map(floor -> modelMapper.map(floor, FloorDTO.class));
+  public List<FloorDTO> getWarehouseTree() {
+    List<Floor> floors = floorRepository.findAll(Sort.by("name").ascending());
+
+    List<UUID> floorIds = floors.stream()
+        .map(Floor::getId)
+        .toList();
+
+    List<Aisle> aisles = aisleRepository.findByFloorIdIn(floorIds);
+
+    List<UUID> aisleIds = aisles.stream()
+        .map(Aisle::getId)
+        .toList();
+
+    List<Shelf> shelves = aisleIds.isEmpty()
+        ? List.of()
+        : shelfRepository.findByAisleIdIn(aisleIds);
+
+    Map<UUID, List<ShelfDTO>> shelvesByAisleId = shelves.stream()
+        .map(this::toShelfDTO)
+        .collect(Collectors.groupingBy(ShelfDTO::getAisleId));
+
+    Map<UUID, List<AisleDTO>> aislesByFloorId = aisles.stream()
+        .map(aisle -> {
+            AisleDTO dto = toAisleDTO(aisle);
+            dto.setShelves(
+                shelvesByAisleId.getOrDefault(aisle.getId(), List.of())
+            );
+            return dto;
+        })
+        .collect(Collectors.groupingBy(AisleDTO::getFloorId));
+
+    return floors.stream()
+        .map(floor -> {
+            FloorDTO dto = modelMapper.map(floor, FloorDTO.class);
+            dto.setAisles(
+                aislesByFloorId.getOrDefault(floor.getId(), List.of())
+            );
+            return dto;
+        })
+        .toList();
   }
 
   @Override
@@ -105,9 +146,9 @@ public class WarehouseServiceImpl implements WarehouseService {
   @Override
   @Transactional(readOnly = true)
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-  public List<FloorDTO> getAllFloors() {
+  public List<SimpleFloorDTO> getAllFloors() {
     return floorRepository.findAll().stream()
-        .map(floor -> modelMapper.map(floor, FloorDTO.class))
+        .map(floor -> modelMapper.map(floor, SimpleFloorDTO.class))
         .toList();
   }
 

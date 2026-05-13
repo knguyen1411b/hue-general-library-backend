@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.common.dto.ApiResponse;
 import org.app.backend.common.dto.DataApiResponse;
-import org.app.backend.common.dto.PagedApiResponse;
 import org.app.backend.common.swagger.BadRequestApiResponse;
 import org.app.backend.common.swagger.ForbiddenApiResponse;
 import org.app.backend.common.swagger.NotFoundApiResponse;
@@ -28,8 +27,8 @@ import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
 import org.app.backend.modules.warehouse.dto.FloorDTO;
 import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
 import org.app.backend.modules.warehouse.dto.ShelfDTO;
+import org.app.backend.modules.warehouse.dto.SimpleFloorDTO;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,9 +50,9 @@ public class WarehouseV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @GetMapping("/tree")
-  public PagedApiResponse<FloorDTO> getTree(@ParameterObject Pageable pageable) {
-    return PagedApiResponse.success(
-        warehouseService.getWarehouseTree(pageable), WarehouseMessage.INDEX_SUCCESS.getMessage());
+  public DataApiResponse<List<FloorDTO>> getTree() {
+    return DataApiResponse.success(
+        warehouseService.getWarehouseTree(), WarehouseMessage.INDEX_SUCCESS.getMessage());
   }
 
   @Operation(
@@ -117,7 +116,7 @@ public class WarehouseV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @GetMapping("/floors")
-  public DataApiResponse<List<FloorDTO>> getAllFloors() {
+  public DataApiResponse<List<SimpleFloorDTO>> getAllFloors() {
     return DataApiResponse.success(
         warehouseService.getAllFloors(), WarehouseMessage.FLOOR_LIST_SUCCESS.getMessage());
   }
