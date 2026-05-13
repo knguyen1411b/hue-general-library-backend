@@ -46,7 +46,7 @@ public class FineV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','USER')")
   public PagedApiResponse<FineDTO> index(
       @RequestParam(required = false) UUID rentalId,
       @RequestParam(required = false) FineStatus status,
