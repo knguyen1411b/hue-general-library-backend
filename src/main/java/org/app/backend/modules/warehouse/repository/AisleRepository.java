@@ -10,5 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface AisleRepository extends JpaRepository<Aisle, UUID> {
   List<Aisle> findByFloorId(UUID floorId);
 
+  List<Aisle> findByFloorIdIn(List<UUID> floorIds);
+
   boolean existsByFloorIdAndNameIgnoreCase(UUID floorId, String name);
 }

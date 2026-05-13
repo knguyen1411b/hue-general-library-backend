@@ -1,7 +1,5 @@
 package org.app.backend.modules.warehouse.dto;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -9,19 +7,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.warehouse.AisleStatus;
-import org.app.backend.modules.warehouse.dto.ShelfDTO;
+import org.app.backend.modules.warehouse.FloorStatus;
+
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AisleDTO {
+public class SimpleFloorDTO {
   UUID id;
-  UUID floorId;
-  String floorName;
   String name;
-  AisleStatus status;
-  List<ShelfDTO> shelves = new ArrayList<>();
+  FloorStatus status;
 }
