@@ -62,6 +62,7 @@ public class BookItemServiceImpl implements BookItemService {
     BookItem bookItem =
         bookItemRepository
             .findById(id)
+            .filter(item -> item.getStatus() != BookItemStatus.DELETED)
             .orElseThrow(
                 () ->
                     new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
@@ -172,9 +173,13 @@ public class BookItemServiceImpl implements BookItemService {
     BookItem bookItem =
         bookItemRepository
             .findById(id)
+            .filter(item -> item.getStatus() != BookItemStatus.DELETED)
             .orElseThrow(
                 () ->
                     new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
+    if (bookItem.getStatus() == BookItemStatus.BORROWED) {
+      throw new AppException(HttpStatus.CONFLICT, "Ban sach dang duoc muon, khong the xoa");
+    }
     auditLogService.log(
         actor != null ? actor.getId() : null,
         actor != null ? actor.getUsername() : "system",

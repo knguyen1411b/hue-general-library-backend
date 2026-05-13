@@ -93,6 +93,17 @@ class BookItemServiceImplTest {
   }
 
   @Test
+  @DisplayName("Find By Id - Deleted Item Not Found")
+  void testFindById_DeletedItemNotFound() {
+    mockBookItem.setStatus(BookItemStatus.DELETED);
+    when(bookItemRepository.findById(bookItemId)).thenReturn(Optional.of(mockBookItem));
+
+    AppException exception =
+        assertThrows(AppException.class, () -> bookItemService.findById(bookItemId));
+    assertEquals(BookItemMessage.NOT_FOUND.getMessage(), exception.getMessage());
+  }
+
+  @Test
   @DisplayName("Create Book Item - Success")
   void testCreateBookItem_Success() {
     BookItemCreateDTO dto = new BookItemCreateDTO();
@@ -142,5 +153,18 @@ class BookItemServiceImplTest {
 
     assertEquals(BookItemStatus.DELETED, mockBookItem.getStatus());
     verify(bookItemRepository, times(1)).save(mockBookItem);
+  }
+
+  @Test
+  @DisplayName("Delete Book Item - Borrowed Item Conflict")
+  void testDeleteBookItem_BorrowedItemConflict() {
+    mockBookItem.setStatus(BookItemStatus.BORROWED);
+    when(bookItemRepository.findById(bookItemId)).thenReturn(Optional.of(mockBookItem));
+
+    AppException exception =
+        assertThrows(AppException.class, () -> bookItemService.delete(bookItemId, mockUserDetails));
+
+    assertEquals("Ban sach dang duoc muon, khong the xoa", exception.getMessage());
+    verify(bookItemRepository, never()).save(any(BookItem.class));
   }
 }

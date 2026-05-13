@@ -3,7 +3,7 @@ package org.app.backend.modules.book.utils;
 import java.security.SecureRandom;
 
 public class BookUtil {
-  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   private static final SecureRandom RANDOM = new SecureRandom();
 
   public static String generateBarcode() {

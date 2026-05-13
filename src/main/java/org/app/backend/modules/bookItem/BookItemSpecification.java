@@ -16,17 +16,19 @@ public class BookItemSpecification {
 
       predicates.add(cb.notEqual(root.get("status"), BookItemStatus.DELETED));
 
-      if (f.getBarcode() != null && !f.getBarcode().isBlank()) {
-        predicates.add(cb.like(root.get("barcode"), "%" + f.getBarcode() + "%"));
-      }
-      if (f.getBookId() != null) {
-        predicates.add(cb.equal(root.get("book").get("id"), f.getBookId()));
-      }
-      if (f.getStatus() != null) {
-        predicates.add(cb.equal(root.get("status"), f.getStatus()));
-      }
-      if (f.getShelfPositionId() != null) {
-        predicates.add(cb.equal(root.get("position").get("id"), f.getShelfPositionId()));
+      if (f != null) {
+        if (f.getBarcode() != null && !f.getBarcode().isBlank()) {
+          predicates.add(cb.like(root.get("barcode"), "%" + f.getBarcode() + "%"));
+        }
+        if (f.getBookId() != null) {
+          predicates.add(cb.equal(root.get("book").get("id"), f.getBookId()));
+        }
+        if (f.getStatus() != null) {
+          predicates.add(cb.equal(root.get("status"), f.getStatus()));
+        }
+        if (f.getShelfPositionId() != null) {
+          predicates.add(cb.equal(root.get("position").get("id"), f.getShelfPositionId()));
+        }
       }
 
       return cb.and(predicates.toArray(new Predicate[0]));
