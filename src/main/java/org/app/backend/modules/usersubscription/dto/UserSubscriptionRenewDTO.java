@@ -1,5 +1,6 @@
-package org.app.backend.modules.warehouse.dto;
+package org.app.backend.modules.usersubscription.dto;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -7,16 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.warehouse.FloorStatus;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FloorDTO {
+public class UserSubscriptionRenewDTO {
 
-    UUID id;
-    String name;
-    FloorStatus status;
+  @NotNull(message = "Subscription ID is required")
+  UUID subscriptionId;
 }

@@ -33,6 +33,8 @@ public enum UserSubscriptionMessage {
   VALIDATION_MAX_BOOKS_REQUIRED("Số sách tối đa không được để trống"),
   VALIDATION_PRICE_REQUIRED("Giá gói không được để trống"),
 
+  ACCESS_DENIED_UPDATE_OTHER("Không có quyền cập nhật đăng ký gói của người dùng khác"),
+
   LOG_CREATING("Đang tạo đăng ký gói cho người dùng"),
   LOG_UPDATING("Đang cập nhật đăng ký gói cho người dùng"),
   LOG_DELETING("Đang xóa đăng ký gói cho người dùng"),

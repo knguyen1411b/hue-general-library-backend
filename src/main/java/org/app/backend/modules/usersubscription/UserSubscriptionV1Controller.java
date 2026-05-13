@@ -18,7 +18,9 @@ import org.app.backend.common.swagger.NotFoundApiResponse;
 import org.app.backend.common.swagger.UnauthorizedApiResponse;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.usersubscription.dto.UserSubscriptionCreateDTO;
+import org.app.backend.modules.usersubscription.dto.UserSubscriptionFilterDTO;
 import org.app.backend.modules.usersubscription.dto.UserSubscriptionResponseDTO;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -47,10 +49,12 @@ public class UserSubscriptionV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public DataApiResponse<List<UserSubscriptionResponseDTO>> index() {
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+  public DataApiResponse<List<UserSubscriptionResponseDTO>> index(
+      @ParameterObject UserSubscriptionFilterDTO filter,
+      @AuthenticationPrincipal CustomUserDetails actor) {
     return DataApiResponse.success(
-        userSubscriptionService.getAll(), UserSubscriptionMessage.LIST_SUCCESS.getMessage());
+        userSubscriptionService.getAll(filter, actor), UserSubscriptionMessage.LIST_SUCCESS.getMessage());
   }
 
   @Operation(
@@ -72,9 +76,11 @@ public class UserSubscriptionV1Controller {
   @ForbiddenApiResponse
   @GetMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or #id == principal.id")
-  public DataApiResponse<UserSubscriptionResponseDTO> show(@PathVariable UUID id) {
+  public DataApiResponse<UserSubscriptionResponseDTO> show(
+      @PathVariable UUID id,
+      @AuthenticationPrincipal CustomUserDetails actor) {
     return DataApiResponse.success(
-        userSubscriptionService.getById(id), UserSubscriptionMessage.FOUND_SUCCESS.getMessage());
+        userSubscriptionService.getById(id, actor), UserSubscriptionMessage.FOUND_SUCCESS.getMessage());
   }
 
   @Operation(
@@ -109,8 +115,8 @@ public class UserSubscriptionV1Controller {
   }
 
   @Operation(
-      summary = "Cập nhật đăng ký gói cước",
-      description = "Cập nhật thông tin của một đăng ký gói cước dựa trên ID.",
+      summary = "Cập nhật đăng ký gói cước (Renew / Cancel)",
+      description = "Cập nhật trạng thái đăng ký gói cước: RENEW gia hạn hoặc CANCEL hủy gói.",
       parameters = {
         @Parameter(
             name = "id",
@@ -123,7 +129,7 @@ public class UserSubscriptionV1Controller {
               content =
                   @Content(
                       mediaType = MediaType.APPLICATION_JSON_VALUE,
-                      schema = @Schema(implementation = UserSubscription.class))),
+                      schema = @Schema(implementation = UserSubscriptionAction.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -138,13 +144,13 @@ public class UserSubscriptionV1Controller {
       responseCode = "400",
       description = "Bad Request")
   @NotFoundApiResponse
-  @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  @PatchMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
   public ApiResponse update(
       @PathVariable UUID id,
-      @Valid @RequestBody UserSubscription userSubscription,
+      @RequestBody UserSubscriptionAction action,
       @AuthenticationPrincipal CustomUserDetails actor) {
-    userSubscriptionService.update(id, userSubscription);
+    userSubscriptionService.update(id, action, actor);
     return ApiResponse.success(UserSubscriptionMessage.UPDATED_SUCCESS.getMessage());
   }
 

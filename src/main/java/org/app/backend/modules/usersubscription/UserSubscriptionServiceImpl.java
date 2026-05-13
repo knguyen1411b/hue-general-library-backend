@@ -9,11 +9,15 @@ import lombok.experimental.FieldDefaults;
 import org.app.backend.common.exception.AppException;
 import org.app.backend.modules.subscription.Subscription;
 import org.app.backend.modules.subscription.SubscriptionRepository;
+import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.user.User;
 import org.app.backend.modules.user.UserRepository;
+import org.app.backend.modules.user.UserRole;
 import org.app.backend.modules.usersubscription.dto.UserSubscriptionCreateDTO;
+import org.app.backend.modules.usersubscription.dto.UserSubscriptionFilterDTO;
 import org.app.backend.modules.usersubscription.dto.UserSubscriptionResponseDTO;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,26 +78,91 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
   @Override
   @Transactional(readOnly = true)
-  public UserSubscriptionResponseDTO getById(UUID id) {
+  public UserSubscriptionResponseDTO getById(UUID id, CustomUserDetails actor) {
     UserSubscription entity = getEntity(id);
+    // USER role can only see their own active subscriptions
+    if (actor.getRole() == UserRole.USER) {
+      if (!entity.getUser().getId().equals(actor.getId())
+          || entity.getStatus() == UserSubscriptionStatus.CANCELED) {
+        throw new AppException(
+            HttpStatus.NOT_FOUND, UserSubscriptionMessage.NOT_FOUND.getMessage());
+      }
+    }
     return modelMapper.map(entity, UserSubscriptionResponseDTO.class);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public List<UserSubscriptionResponseDTO> getAll() {
-    return userSubscriptionRepository.findAll().stream()
+  public List<UserSubscriptionResponseDTO> getAll(
+      UserSubscriptionFilterDTO filter, CustomUserDetails actor) {
+    // USER role can only see their own active (non-canceled) subscriptions
+    if (actor.getRole() == UserRole.USER) {
+      if (filter == null) {
+        filter = new UserSubscriptionFilterDTO();
+      }
+      filter.setUserId(actor.getId());
+      filter.setExcludeStatus(UserSubscriptionStatus.CANCELED);
+    }
+    return userSubscriptionRepository
+        .findAll(UserSubscriptionSpecification.filter(filter)).stream()
         .map(e -> modelMapper.map(e, UserSubscriptionResponseDTO.class))
         .toList();
   }
 
   @Override
   @Transactional
-  public UserSubscriptionResponseDTO update(UUID id, UserSubscription userSubscription) {
+  public UserSubscriptionResponseDTO update(
+      UUID id, UserSubscriptionAction action, CustomUserDetails actor) {
     UserSubscription existing = getEntity(id);
-    UserSubscription merged = merge(existing, userSubscription);
-    validateUserSubscription(merged);
-    UserSubscription saved = userSubscriptionRepository.save(merged);
+
+    // --- Auth check ---
+    if (actor.getRole() == UserRole.USER) {
+      if (!existing.getUser().getId().equals(actor.getId())) {
+        throw new AppException(
+            HttpStatus.FORBIDDEN,
+            UserSubscriptionMessage.ACCESS_DENIED_UPDATE_OTHER.getMessage());
+      }
+      // CANCELED subscriptions are invisible / unmodifiable for users
+      if (existing.getStatus() == UserSubscriptionStatus.CANCELED) {
+        throw new AppException(
+            HttpStatus.BAD_REQUEST,
+            UserSubscriptionMessage.SUBSCRIPTION_CANCELED.getMessage());
+      }
+    }
+
+    switch (action) {
+      case RENEW -> {
+        // Renew is only allowed for ACTIVE subscriptions that have not expired yet
+        if (existing.getStatus() != UserSubscriptionStatus.ACTIVE) {
+          throw new AppException(
+              HttpStatus.BAD_REQUEST,
+              UserSubscriptionMessage.INVALID_STATUS.getMessage());
+        }
+        if (existing.getEndDate().isBefore(LocalDate.now())) {
+          // Subscription already expired → auto-cancel and reject renew
+          existing.setStatus(UserSubscriptionStatus.CANCELED);
+          userSubscriptionRepository.save(existing);
+          throw new AppException(
+              HttpStatus.BAD_REQUEST,
+              UserSubscriptionMessage.SUBSCRIPTION_EXPIRED.getMessage());
+        }
+        // Re-fetch the subscription plan to get durationDays
+        Subscription subscription = existing.getSubscription();
+        existing.setStartDate(LocalDate.now());
+        existing.setEndDate(LocalDate.now().plusDays(subscription.getDurationDays()));
+        existing.setStatus(UserSubscriptionStatus.ACTIVE);
+      }
+      case CANCEL -> {
+        if (existing.getStatus() != UserSubscriptionStatus.ACTIVE) {
+          throw new AppException(
+              HttpStatus.BAD_REQUEST,
+              UserSubscriptionMessage.INVALID_STATUS.getMessage());
+        }
+        existing.setStatus(UserSubscriptionStatus.CANCELED);
+      }
+    }
+
+    UserSubscription saved = userSubscriptionRepository.save(existing);
     return modelMapper.map(saved, UserSubscriptionResponseDTO.class);
   }
 
