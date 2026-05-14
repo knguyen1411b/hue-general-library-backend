@@ -119,7 +119,7 @@ public class SubscriptionV1Controller {
   @ForbiddenApiResponse
   @BadRequestApiResponse
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse create(
       @Valid @RequestBody SubscriptionCreateDTO dto,
       @AuthenticationPrincipal CustomUserDetails actor) {
@@ -152,7 +152,7 @@ public class SubscriptionV1Controller {
   @BadRequestApiResponse
   @NotFoundApiResponse
   @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse update(
       @PathVariable UUID id,
       @Valid @RequestBody SubscriptionUpdateDTO dto,
@@ -179,7 +179,7 @@ public class SubscriptionV1Controller {
   @ForbiddenApiResponse
   @NotFoundApiResponse
   @DeleteMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse delete(
       @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
     subscriptionService.delete(id, actor);
