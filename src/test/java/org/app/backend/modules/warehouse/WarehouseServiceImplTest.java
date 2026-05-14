@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.app.backend.common.exception.AppException;
@@ -14,10 +15,14 @@ import org.app.backend.modules.warehouse.dto.AisleCreateDTO;
 import org.app.backend.modules.warehouse.dto.AisleDTO;
 import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
 import org.app.backend.modules.warehouse.dto.FloorDTO;
+import org.app.backend.modules.warehouse.dto.PositionDTO;
 import org.app.backend.modules.warehouse.entity.Aisle;
 import org.app.backend.modules.warehouse.entity.Floor;
+import org.app.backend.modules.warehouse.entity.Position;
+import org.app.backend.modules.warehouse.entity.Shelf;
 import org.app.backend.modules.warehouse.repository.AisleRepository;
 import org.app.backend.modules.warehouse.repository.FloorRepository;
+import org.app.backend.modules.warehouse.repository.PositionRepository;
 import org.app.backend.modules.warehouse.repository.ShelfRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +39,7 @@ class WarehouseServiceImplTest {
   @Mock private FloorRepository floorRepository;
   @Mock private AisleRepository aisleRepository;
   @Mock private ShelfRepository shelfRepository;
+  @Mock private PositionRepository positionRepository;
   @Mock private ModelMapper modelMapper;
   @Mock private AuditLogService auditLogService;
 
@@ -44,11 +50,13 @@ class WarehouseServiceImplTest {
   private CustomUserDetails mockActor;
   private UUID floorId;
   private UUID aisleId;
+  private UUID shelfId;
 
   @BeforeEach
   void setUp() {
     floorId = UUID.randomUUID();
     aisleId = UUID.randomUUID();
+    shelfId = UUID.randomUUID();
 
     mockFloor = new Floor();
     mockFloor.setId(floorId);
@@ -163,5 +171,37 @@ class WarehouseServiceImplTest {
 
     assertEquals(AisleStatus.INACTIVE, mockAisle.getStatus());
     verify(aisleRepository, times(1)).save(mockAisle);
+  }
+
+  @Test
+  @DisplayName("Get Positions By Shelf Id - Success")
+  void testGetPositionsByShelfId_Success() {
+    Position position1 = new Position();
+    position1.setId(UUID.randomUUID());
+    position1.setBookCount(2);
+
+    Position position2 = new Position();
+    position2.setId(UUID.randomUUID());
+    position2.setBookCount(0);
+
+    when(shelfRepository.existsById(shelfId)).thenReturn(true);
+    when(positionRepository.findByShelfId(shelfId))
+        .thenReturn(List.of(position1, position2));
+
+    List<PositionDTO> result = warehouseService.getPositionsByShelfId(shelfId);
+
+    assertEquals(2, result.size());
+    assertEquals(position1.getId(), result.get(0).getId());
+    assertEquals(2, result.get(0).getBookCount());
+    verify(positionRepository, times(1)).findByShelfId(shelfId);
+  }
+
+  @Test
+  @DisplayName("Get Positions By Shelf Id - Shelf Not Found")
+  void testGetPositionsByShelfId_ShelfNotFound() {
+    when(shelfRepository.existsById(shelfId)).thenReturn(false);
+
+    assertThrows(AppException.class, () -> warehouseService.getPositionsByShelfId(shelfId));
+    verify(positionRepository, never()).findByShelfId(any());
   }
 }

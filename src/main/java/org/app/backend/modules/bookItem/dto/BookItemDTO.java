@@ -34,10 +34,6 @@ public class BookItemDTO {
 
   String shelfName;
 
-  Integer rowIndex;
-
-  Integer colIndex;
-
   Instant createdAt;
 
   Instant updatedAt;

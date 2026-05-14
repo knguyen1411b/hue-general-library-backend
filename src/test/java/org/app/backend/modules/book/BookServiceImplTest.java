@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.app.backend.common.exception.AppException;
@@ -17,20 +18,27 @@ import org.app.backend.modules.audit.enums.AuditLogStatus;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.dto.BookCreateDTO;
 import org.app.backend.modules.book.dto.BookDTO;
+import org.app.backend.modules.book.dto.BookUpdateDTO;
 import org.app.backend.modules.book.enums.BookStatus;
-import org.app.backend.modules.bookItem.BookItem;
 import org.app.backend.modules.bookItem.BookItemRepository;
 import org.app.backend.modules.category.Category;
 import org.app.backend.modules.category.CategoryRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
 class BookServiceImplTest {
@@ -115,9 +123,8 @@ class BookServiceImplTest {
     Book mappedBook = new Book();
     mappedBook.setId(UUID.randomUUID()); // To be set to null in service
     mappedBook.setTitle("New Book");
+    mappedBook.setCount(dto.getCount());
     when(modelMapper.map(dto, Book.class)).thenReturn(mappedBook);
-
-    when(bookItemRepository.existsByBarcode(anyString())).thenReturn(false);
 
     when(bookRepository.save(any(Book.class)))
         .thenAnswer(
@@ -130,7 +137,8 @@ class BookServiceImplTest {
     bookService.create(dto, mockUserDetails);
 
     verify(bookRepository, times(1)).save(mappedBook);
-    verify(bookItemRepository, times(1)).save(any(BookItem.class));
+    verify(bookItemRepository, times(1)).saveAll(any());
+    verify(bookItemRepository, times(1)).existsByBarcode(anyString());
     verify(auditLogService, times(1))
         .log(
             eq(mockUserDetails.getId()),
@@ -142,6 +150,64 @@ class BookServiceImplTest {
             anyString());
     assertNotNull(mappedBook.getId());
     assertEquals(BookStatus.ACTIVE, mappedBook.getStatus());
+    assertEquals(1, mappedBook.getCount());
+  }
+
+  @Test
+  @DisplayName("Update Book - Count generates BookItems")
+  void testUpdateBook_CountGeneratesBookItems() {
+    BookUpdateDTO dto = new BookUpdateDTO();
+    dto.setCount(9);
+
+    when(bookRepository.findById(bookId)).thenReturn(Optional.of(mockBook));
+
+    bookService.update(bookId, dto, mockUserDetails);
+
+    assertEquals(9, mockBook.getCount());
+    verify(bookRepository, times(1)).save(mockBook);
+    verify(bookItemRepository, times(1)).saveAll(any());
+    verify(bookItemRepository, times(9)).existsByBarcode(anyString());
+  }
+
+  @Test
+  @DisplayName("Find All - Ignores invalid sort properties")
+  void testFindAll_IgnoresInvalidSortProperties() {
+    Pageable pageable =
+        PageRequest.of(
+            0, 10, Sort.by(Sort.Order.desc("borrowCount"), Sort.Order.asc("title")));
+    BookDTO dto = new BookDTO();
+
+    when(bookRepository.findAll(
+            org.mockito.ArgumentMatchers.<Specification<Book>>any(), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(mockBook)));
+    when(modelMapper.map(mockBook, BookDTO.class)).thenReturn(dto);
+
+    bookService.findAll(null, pageable);
+
+    ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+    verify(bookRepository)
+        .findAll(org.mockito.ArgumentMatchers.<Specification<Book>>any(), pageableCaptor.capture());
+    Sort sort = pageableCaptor.getValue().getSort();
+    Assertions.assertFalse(sort.getOrderFor("borrowCount") != null);
+    Assertions.assertNotNull(sort.getOrderFor("title"));
+  }
+
+  @Test
+  @DisplayName("Find All - Invalid only sort becomes unsorted")
+  void testFindAll_InvalidOnlySortBecomesUnsorted() {
+    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("borrowCount")));
+
+    when(bookRepository.findAll(
+            org.mockito.ArgumentMatchers.<Specification<Book>>any(), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(mockBook)));
+    when(modelMapper.map(mockBook, BookDTO.class)).thenReturn(new BookDTO());
+
+    bookService.findAll(null, pageable);
+
+    ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+    verify(bookRepository)
+        .findAll(org.mockito.ArgumentMatchers.<Specification<Book>>any(), pageableCaptor.capture());
+    assertTrue(pageableCaptor.getValue().getSort().isUnsorted());
   }
 
   @Test

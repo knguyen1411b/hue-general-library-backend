@@ -21,13 +21,16 @@ import org.app.backend.modules.warehouse.dto.AisleUpdateDTO;
 import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
 import org.app.backend.modules.warehouse.dto.FloorDTO;
 import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
+import org.app.backend.modules.warehouse.dto.PositionDTO;
 import org.app.backend.modules.warehouse.dto.ShelfDTO;
 import org.app.backend.modules.warehouse.dto.SimpleFloorDTO;
 import org.app.backend.modules.warehouse.entity.Aisle;
 import org.app.backend.modules.warehouse.entity.Floor;
+import org.app.backend.modules.warehouse.entity.Position;
 import org.app.backend.modules.warehouse.entity.Shelf;
 import org.app.backend.modules.warehouse.repository.AisleRepository;
 import org.app.backend.modules.warehouse.repository.FloorRepository;
+import org.app.backend.modules.warehouse.repository.PositionRepository;
 import org.app.backend.modules.warehouse.repository.ShelfRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Sort;
@@ -43,6 +46,7 @@ public class WarehouseServiceImpl implements WarehouseService {
   FloorRepository floorRepository;
   AisleRepository aisleRepository;
   ShelfRepository shelfRepository;
+  PositionRepository positionRepository;
   ModelMapper modelMapper;
   AuditLogService auditLogService;
 
@@ -231,8 +235,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     Shelf shelf = new Shelf();
     shelf.setAisle(aisle);
     shelf.setName(dto.getName());
-    shelf.setMaxCol(dto.getMaxCol());
-    shelf.setMaxRow(dto.getMaxRow());
 
     shelfRepository.save(shelf);
     log(actor, AuditLogAction.CREATE, shelf.getId().toString(), "Tạo kệ: " + shelf.getName());
@@ -304,9 +306,14 @@ public class WarehouseServiceImpl implements WarehouseService {
     return ShelfDTO.builder()
         .id(shelf.getId())
         .name(shelf.getName())
-        .maxRow(shelf.getMaxRow())
-        .maxCol(shelf.getMaxCol())
         .aisleId(shelf.getAisle().getId())
+        .build();
+  }
+
+  private PositionDTO toPositionDTO(Position position) {
+    return PositionDTO.builder()
+        .id(position.getId())
+        .bookCount(position.getBookCount())
         .build();
   }
 
@@ -327,5 +334,17 @@ public class WarehouseServiceImpl implements WarehouseService {
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   public List<ShelfDTO> getAllShelves() {
     return shelfRepository.findAll().stream().map(this::toShelfDTO).toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  public List<PositionDTO> getPositionsByShelfId(UUID shelfId) {
+    if (!shelfRepository.existsById(shelfId)) {
+      throw new AppException(HttpStatus.NOT_FOUND, WarehouseMessage.SHELF_NOT_FOUND.getMessage());
+    }
+    return positionRepository.findByShelfId(shelfId).stream()
+        .map(this::toPositionDTO)
+        .toList();
   }
 }
