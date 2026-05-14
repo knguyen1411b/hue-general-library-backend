@@ -10,6 +10,7 @@ import org.app.backend.modules.warehouse.dto.AisleUpdateDTO;
 import org.app.backend.modules.warehouse.dto.FloorCreateDTO;
 import org.app.backend.modules.warehouse.dto.FloorDTO;
 import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
+import org.app.backend.modules.warehouse.dto.PositionDTO;
 import org.app.backend.modules.warehouse.dto.ShelfDTO;
 import org.app.backend.modules.warehouse.dto.SimpleFloorDTO;
 
@@ -42,4 +43,6 @@ public interface WarehouseService {
   void deleteShelf(UUID id, CustomUserDetails actor);
 
   List<ShelfDTO> getAllShelves();
+
+  List<PositionDTO> getPositionsByShelfId(UUID shelfId);
 }

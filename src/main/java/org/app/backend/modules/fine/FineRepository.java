@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 @Repository
 public interface FineRepository extends JpaRepository<Fine, UUID> {
@@ -22,4 +23,8 @@ public interface FineRepository extends JpaRepository<Fine, UUID> {
   // tạo hàm existsByRental_User_IdAndStatus để kiểm tra xem có tồn tại phạt nào chưa thanh toán của
   // người dùng hay không
   boolean existsByRental_UserIdAndStatus(UUID userId, FineStatus status);
+
+  boolean existsByRental_Id(UUID rentalId);
+  
+  Optional<Fine> findByRental_Id(UUID rentalId);
 }

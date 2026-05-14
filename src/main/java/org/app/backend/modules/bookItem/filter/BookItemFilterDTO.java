@@ -10,4 +10,7 @@ public class BookItemFilterDTO {
   UUID bookId;
   BookItemStatus status;
   UUID shelfPositionId;
+  String floorName;
+  String aisleName;
+  String shelfName;
 }

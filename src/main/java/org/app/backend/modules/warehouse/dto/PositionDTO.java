@@ -13,8 +13,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ShelfDTO {
+public class PositionDTO {
   UUID id;
-  String name;
-  UUID aisleId;
+  int bookCount;
 }

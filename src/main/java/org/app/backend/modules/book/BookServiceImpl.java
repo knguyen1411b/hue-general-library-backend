@@ -1,6 +1,9 @@
 package org.app.backend.modules.book;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +24,9 @@ import org.app.backend.modules.category.CategoryRepository;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,18 +37,33 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookServiceImpl implements BookService {
+  private static final Set<String> ALLOWED_SORT_PROPERTIES =
+      Set.of(
+          "title",
+          "author",
+          "isbn",
+          "price",
+          "publishedYear",
+          "publishers",
+          "count",
+          "status",
+          "createdAt",
+          "updatedAt");
+
   BookRepository bookRepository;
+  BookItemRepository bookItemRepository;
   CategoryRepository categoryRepository;
   FileService fileService;
   ModelMapper modelMapper;
   AuditLogService auditLogService;
-  BookItemRepository bookItemRepository;
 
   @Override
   @Transactional(readOnly = true)
   public Page<BookDTO> findAll(BookFilterDTO filter, Pageable pageable) {
     Specification<Book> spec = BookSpecification.filter(filter);
-    return bookRepository.findAll(spec, pageable).map(book -> modelMapper.map(book, BookDTO.class));
+    return bookRepository
+        .findAll(spec, sanitizePageable(pageable))
+        .map(book -> modelMapper.map(book, BookDTO.class));
   }
 
   @Override
@@ -83,26 +103,7 @@ public class BookServiceImpl implements BookService {
     }
 
     bookRepository.save(book);
-
-    // Generate BookItems based on count
-    int count = dto.getCount();
-    if (count > 0) {
-      for (int i = 0; i < count; i++) {
-        String barcode;
-        do {
-          barcode = BookUtil.generateBarcode();
-        } while (bookItemRepository.existsByBarcode(barcode));
-
-        BookItem bookItem =
-            BookItem.builder()
-                .barcode(barcode)
-                .book(book)
-                .importDate(LocalDate.now())
-                .status(BookItemStatus.AVAILABLE)
-                .build();
-        bookItemRepository.save(bookItem);
-      }
-    }
+    createBookItems(book, book.getCount());
 
     auditLogService.log(
         actor != null ? actor.getId() : null,
@@ -157,24 +158,6 @@ public class BookServiceImpl implements BookService {
     }
     if (dto.getCount() != null) {
       book.setCount(dto.getCount());
-      int count = dto.getCount();
-      if (count > 0) {
-        for (int i = 0; i < count; i++) {
-          String barcode;
-          do {
-            barcode = BookUtil.generateBarcode();
-          } while (bookItemRepository.existsByBarcode(barcode));
-
-          BookItem bookItem =
-              BookItem.builder()
-                  .barcode(barcode)
-                  .book(book)
-                  .importDate(LocalDate.now())
-                  .status(BookItemStatus.AVAILABLE)
-                  .build();
-          bookItemRepository.save(bookItem);
-        }
-      }
     }
     if (dto.getPublishedYear() != null) {
       book.setPublishedYear(dto.getPublishedYear());
@@ -183,6 +166,9 @@ public class BookServiceImpl implements BookService {
       book.setStatus(dto.getStatus());
     }
     bookRepository.save(book);
+    if (dto.getCount() != null) {
+      createBookItems(book, dto.getCount());
+    }
 
     auditLogService.log(
         actor != null ? actor.getId() : null,
@@ -223,5 +209,45 @@ public class BookServiceImpl implements BookService {
     if (bookRepository.existsByIsbn(isbn)) {
       throw new AppException(HttpStatus.CONFLICT, "Mã ISBN đã tồn tại trên hệ thống");
     }
+  }
+
+  private void createBookItems(Book book, Integer quantity) {
+    if (quantity == null || quantity <= 0) {
+      return;
+    }
+
+    List<BookItem> bookItems = new ArrayList<>();
+    for (int i = 0; i < quantity; i++) {
+      bookItems.add(
+          BookItem.builder()
+              .book(book)
+              .barcode(generateUniqueBarcode())
+              .importDate(LocalDate.now())
+              .status(BookItemStatus.AVAILABLE)
+              .build());
+    }
+    bookItemRepository.saveAll(bookItems);
+  }
+
+  private String generateUniqueBarcode() {
+    String barcode;
+    do {
+      barcode = BookUtil.generateBarcode();
+    } while (bookItemRepository.existsByBarcode(barcode));
+    return barcode;
+  }
+
+  private Pageable sanitizePageable(Pageable pageable) {
+    if (pageable == null || pageable.isUnpaged()) {
+      return pageable;
+    }
+
+    Sort safeSort =
+        Sort.by(
+            pageable.getSort().stream()
+                .filter(order -> ALLOWED_SORT_PROPERTIES.contains(order.getProperty()))
+                .toList());
+
+    return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), safeSort);
   }
 }
