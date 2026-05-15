@@ -5,31 +5,35 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserSubscriptionRepository extends JpaRepository<UserSubscription, UUID>, JpaSpecificationExecutor<UserSubscription> {
+public interface UserSubscriptionRepository extends JpaRepository<UserSubscription, UUID> {
 
-  boolean existsByUserIdAndStatus(UUID userId, UserSubscriptionStatus status);
+  boolean existsByUser_IdAndStatus(UUID userId, UserSubscriptionStatus status);
 
-  boolean existsBySubscriptionIdAndStatus(UUID subscriptionId, UserSubscriptionStatus status);
+  boolean existsBySubscription_IdAndStatus(UUID subscriptionId, UserSubscriptionStatus status);
 
-  List<UserSubscription> findByUserId(UUID userId);
+  List<UserSubscription> findByUser_Id(UUID userId);
 
-  List<UserSubscription> findBySubscriptionId(UUID subscriptionId);
+  List<UserSubscription> findByStatusNot(UserSubscriptionStatus status);
+
+  List<UserSubscription> findByUser_IdAndStatusNot(
+      UUID userId, UserSubscriptionStatus status);
+
+  List<UserSubscription> findBySubscription_Id(UUID subscriptionId);
 
   List<UserSubscription> findByStatus(UserSubscriptionStatus status);
 
-  List<UserSubscription> findByUserIdAndStatus(UUID userId, UserSubscriptionStatus status);
+  List<UserSubscription> findByUser_IdAndStatus(UUID userId, UserSubscriptionStatus status);
 
   long countByStatus(UserSubscriptionStatus status);
 
-  Optional<UserSubscription> findTopByUserIdAndEndDateAfterOrderByEndDateDesc(
+  Optional<UserSubscription> findTopByUser_IdAndEndDateAfterOrderByEndDateDesc(
       UUID userId, LocalDate now);
 
   default Optional<UserSubscription> findActiveSubscriptionByUserId(UUID userId) {
-    return findTopByUserIdAndEndDateAfterOrderByEndDateDesc(userId, LocalDate.now())
+    return findTopByUser_IdAndEndDateAfterOrderByEndDateDesc(userId, LocalDate.now())
         .filter(sub -> sub.getStatus() == UserSubscriptionStatus.ACTIVE);
   }
 }

@@ -34,6 +34,11 @@ public enum UserSubscriptionMessage {
   VALIDATION_PRICE_REQUIRED("Giá gói không được để trống"),
 
   ACCESS_DENIED_UPDATE_OTHER("Không có quyền cập nhật đăng ký gói của người dùng khác"),
+  AUTH_REQUIRED_UPDATE("Yêu cầu xác thực để cập nhật đăng ký gói"),
+  ACCESS_DENIED_UPDATE_START_DATE("Người dùng không được cập nhật ngày bắt đầu gói"),
+  ACCESS_DENIED_UPDATE_STATUS("Người dùng chỉ được phép hủy gói"),
+  INVALID_RENEW_END_DATE("Ngày hết hạn mới không hợp lệ"),
+  RENEW_END_DATE_NOT_EXTENDED("Ngày hết hạn mới phải sau ngày hết hạn hiện tại"),
 
   LOG_CREATING("Đang tạo đăng ký gói cho người dùng"),
   LOG_UPDATING("Đang cập nhật đăng ký gói cho người dùng"),

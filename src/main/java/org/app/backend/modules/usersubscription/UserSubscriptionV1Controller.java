@@ -18,9 +18,8 @@ import org.app.backend.common.swagger.NotFoundApiResponse;
 import org.app.backend.common.swagger.UnauthorizedApiResponse;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.usersubscription.dto.UserSubscriptionCreateDTO;
-import org.app.backend.modules.usersubscription.dto.UserSubscriptionFilterDTO;
 import org.app.backend.modules.usersubscription.dto.UserSubscriptionResponseDTO;
-import org.springdoc.core.annotations.ParameterObject;
+import org.app.backend.modules.usersubscription.dto.UserSubscriptionUpdateDTO;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,12 +48,32 @@ public class UserSubscriptionV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-  public DataApiResponse<List<UserSubscriptionResponseDTO>> index(
-      @ParameterObject UserSubscriptionFilterDTO filter,
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public DataApiResponse<List<UserSubscriptionResponseDTO>> index() {
+    return DataApiResponse.success(
+        userSubscriptionService.getAll(), UserSubscriptionMessage.LIST_SUCCESS.getMessage());
+  }
+
+  @Operation(
+      summary = "Lấy danh sách đăng ký gói cước của người dùng hiện tại",
+      description = "Lấy danh sách đăng ký gói cước của người dùng đang đăng nhập từ JWT.",
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DataApiResponseUserSubscriptionList.class))),
+      })
+  @UnauthorizedApiResponse
+  @ForbiddenApiResponse
+  @GetMapping("/me")
+  @PreAuthorize("hasRole('USER')")
+  public DataApiResponse<List<UserSubscriptionResponseDTO>> mySubscriptions(
       @AuthenticationPrincipal CustomUserDetails actor) {
     return DataApiResponse.success(
-        userSubscriptionService.getAll(filter, actor), UserSubscriptionMessage.LIST_SUCCESS.getMessage());
+        userSubscriptionService.getByUserId(actor.getId()),
+        UserSubscriptionMessage.LIST_SUCCESS.getMessage());
   }
 
   @Operation(
@@ -75,12 +94,10 @@ public class UserSubscriptionV1Controller {
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
   @GetMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or #id == principal.id")
-  public DataApiResponse<UserSubscriptionResponseDTO> show(
-      @PathVariable UUID id,
-      @AuthenticationPrincipal CustomUserDetails actor) {
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+  public DataApiResponse<UserSubscriptionResponseDTO> show(@PathVariable UUID id) {
     return DataApiResponse.success(
-        userSubscriptionService.getById(id, actor), UserSubscriptionMessage.FOUND_SUCCESS.getMessage());
+        userSubscriptionService.getById(id), UserSubscriptionMessage.FOUND_SUCCESS.getMessage());
   }
 
   @Operation(
@@ -107,6 +124,8 @@ public class UserSubscriptionV1Controller {
       responseCode = "400",
       description = "Bad Request")
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasRole('MANAGER') or (hasRole('USER') and #dto.userId == principal.id)")
   public ApiResponse create(
       @Valid @RequestBody UserSubscriptionCreateDTO dto,
       @AuthenticationPrincipal CustomUserDetails actor) {
@@ -115,8 +134,8 @@ public class UserSubscriptionV1Controller {
   }
 
   @Operation(
-      summary = "Cập nhật đăng ký gói cước (Renew / Cancel)",
-      description = "Cập nhật trạng thái đăng ký gói cước: RENEW gia hạn hoặc CANCEL hủy gói.",
+      summary = "Cập nhật đăng ký gói cước",
+      description = "Cập nhật thông tin của một đăng ký gói cước dựa trên ID.",
       parameters = {
         @Parameter(
             name = "id",
@@ -129,14 +148,14 @@ public class UserSubscriptionV1Controller {
               content =
                   @Content(
                       mediaType = MediaType.APPLICATION_JSON_VALUE,
-                      schema = @Schema(implementation = UserSubscriptionAction.class))),
+                      schema = @Schema(implementation = UserSubscriptionUpdateDTO.class))),
       responses = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
             content =
                 @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = ApiResponse.class))),
+                    schema = @Schema(implementation = DataApiResponseUserSubscription.class))),
       })
   @UnauthorizedApiResponse
   @ForbiddenApiResponse
@@ -144,14 +163,14 @@ public class UserSubscriptionV1Controller {
       responseCode = "400",
       description = "Bad Request")
   @NotFoundApiResponse
-  @PatchMapping("/{id}")
+  @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-  public ApiResponse update(
+  public DataApiResponse<UserSubscriptionResponseDTO> update(
       @PathVariable UUID id,
-      @RequestBody UserSubscriptionAction action,
+      @Valid @RequestBody UserSubscriptionUpdateDTO dto,
       @AuthenticationPrincipal CustomUserDetails actor) {
-    userSubscriptionService.update(id, action, actor);
-    return ApiResponse.success(UserSubscriptionMessage.UPDATED_SUCCESS.getMessage());
+    UserSubscriptionResponseDTO updated = userSubscriptionService.update(id, dto, actor);
+    return DataApiResponse.success(updated, UserSubscriptionMessage.UPDATED_SUCCESS.getMessage());
   }
 
   @Operation(
@@ -172,6 +191,7 @@ public class UserSubscriptionV1Controller {
   @ForbiddenApiResponse
   @NotFoundApiResponse
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ApiResponse delete(
       @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails actor) {
     userSubscriptionService.delete(id);
