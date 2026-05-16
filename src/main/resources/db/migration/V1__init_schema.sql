@@ -397,3 +397,19 @@ ALTER TABLE ONLY public.tbl_shelf
 
 ALTER TABLE ONLY public.reservations
     ADD CONSTRAINT fktaj43fkk19q5yr21q86csik9q FOREIGN KEY (book_item_id) REFERENCES public.tbl_bookitem(id);
+
+ALTER TABLE public.tbl_user_subscription
+DROP CONSTRAINT IF EXISTS tbl_user_subscription_status_check;
+
+ALTER TABLE public.tbl_user_subscription
+    ADD CONSTRAINT tbl_user_subscription_status_check
+        CHECK (
+            (status)::text = ANY (
+    ARRAY[
+    'ACTIVE'::character varying,
+    'EXPIRED'::character varying,
+    'CANCELED'::character varying,
+    'DELETED'::character varying
+    ]::text[]
+    )
+    );
