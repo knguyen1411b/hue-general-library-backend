@@ -28,9 +28,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
@@ -173,8 +173,7 @@ class BookServiceImplTest {
   @DisplayName("Find All - Ignores invalid sort properties")
   void testFindAll_IgnoresInvalidSortProperties() {
     Pageable pageable =
-        PageRequest.of(
-            0, 10, Sort.by(Sort.Order.desc("borrowCount"), Sort.Order.asc("title")));
+        PageRequest.of(0, 10, Sort.by(Sort.Order.desc("borrowCount"), Sort.Order.asc("title")));
     BookDTO dto = new BookDTO();
 
     when(bookRepository.findAll(

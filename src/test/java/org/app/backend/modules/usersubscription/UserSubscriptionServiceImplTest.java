@@ -149,7 +149,8 @@ class UserSubscriptionServiceImplTest {
     UserSubscription entity = activeEntity(UUID.randomUUID(), user);
     UserSubscriptionResponseDTO dto = response(entity.getId());
 
-    when(userSubscriptionRepository.findByUser_IdAndStatusNot(userId, UserSubscriptionStatus.DELETED))
+    when(userSubscriptionRepository.findByUser_IdAndStatusNot(
+            userId, UserSubscriptionStatus.DELETED))
         .thenReturn(List.of(entity));
     when(modelMapper.map(entity, UserSubscriptionResponseDTO.class)).thenReturn(dto);
 

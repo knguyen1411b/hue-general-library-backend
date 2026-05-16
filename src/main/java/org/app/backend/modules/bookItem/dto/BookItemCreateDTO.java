@@ -23,7 +23,9 @@ public class BookItemCreateDTO {
 
   @Schema(description = "Barcode cua ban sach", example = "LL04E6OVSCPA6R6PPPA")
   @NotBlank(message = "Barcode khong duoc de trong")
-  @Pattern(regexp = "^[A-Z0-9]{19}$", message = "Barcode phai la chuoi 19 ky tu chu cai in hoa hoac chu so")
+  @Pattern(
+      regexp = "^[A-Z0-9]{19}$",
+      message = "Barcode phai la chuoi 19 ky tu chu cai in hoa hoac chu so")
   String barcode;
 
   @Schema(description = "Ngay nhap kho", example = "2026-04-29")

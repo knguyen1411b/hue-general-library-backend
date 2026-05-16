@@ -14,6 +14,6 @@ public interface ShelfRepository extends JpaRepository<Shelf, UUID> {
 
   List<Shelf> findByAisleIdIn(List<UUID> aisleIds);
 
-  @EntityGraph(attributePaths = { "aisle", "aisle.floor" })
+  @EntityGraph(attributePaths = {"aisle", "aisle.floor"})
   Optional<Shelf> findWithHierarchyById(UUID id);
 }

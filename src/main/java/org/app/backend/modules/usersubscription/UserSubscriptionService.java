@@ -17,7 +17,8 @@ public interface UserSubscriptionService {
 
   List<UserSubscriptionResponseDTO> getByUserId(UUID userId);
 
-  UserSubscriptionResponseDTO update(UUID id, UserSubscriptionUpdateDTO dto, CustomUserDetails actor);
+  UserSubscriptionResponseDTO update(
+      UUID id, UserSubscriptionUpdateDTO dto, CustomUserDetails actor);
 
   void delete(UUID id);
 }

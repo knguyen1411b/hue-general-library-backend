@@ -60,11 +60,13 @@ public class BookItemServiceImpl implements BookItemService {
   @Transactional(readOnly = true)
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER','USER')")
   public BookItemDTO findById(UUID id) {
-    BookItem bookItem = bookItemRepository
-        .findById(id)
-        .filter(item -> item.getStatus() != BookItemStatus.DELETED)
-        .orElseThrow(
-            () -> new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
+    BookItem bookItem =
+        bookItemRepository
+            .findById(id)
+            .filter(item -> item.getStatus() != BookItemStatus.DELETED)
+            .orElseThrow(
+                () ->
+                    new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
     return mapBookItemDto(bookItem);
   }
 
@@ -75,11 +77,13 @@ public class BookItemServiceImpl implements BookItemService {
     validateBarcodeFormat(dto.getBarcode());
     validateBarcodeAvailability(dto.getBarcode());
 
-    Book book = bookRepository
-        .findById(dto.getBookId())
-        .orElseThrow(
-            () -> new AppException(
-                HttpStatus.NOT_FOUND, BookItemMessage.BOOK_NOT_FOUND.getMessage()));
+    Book book =
+        bookRepository
+            .findById(dto.getBookId())
+            .orElseThrow(
+                () ->
+                    new AppException(
+                        HttpStatus.NOT_FOUND, BookItemMessage.BOOK_NOT_FOUND.getMessage()));
 
     BookItem bookItem = BookItem.builder().barcode(dto.getBarcode()).book(book).build();
 
@@ -106,11 +110,13 @@ public class BookItemServiceImpl implements BookItemService {
   @Transactional
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   public void update(UUID id, BookItemUpdateDTO dto, CustomUserDetails actor) {
-    BookItem bookItem = bookItemRepository
-        .findById(id)
-        .filter(item -> item.getStatus() != BookItemStatus.DELETED)
-        .orElseThrow(
-            () -> new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
+    BookItem bookItem =
+        bookItemRepository
+            .findById(id)
+            .filter(item -> item.getStatus() != BookItemStatus.DELETED)
+            .orElseThrow(
+                () ->
+                    new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
 
     if (dto.getBarcode() != null) {
       validateBarcodeFormat(dto.getBarcode());
@@ -146,11 +152,13 @@ public class BookItemServiceImpl implements BookItemService {
   @Transactional
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   public void delete(UUID id, CustomUserDetails actor) {
-    BookItem bookItem = bookItemRepository
-        .findById(id)
-        .filter(item -> item.getStatus() != BookItemStatus.DELETED)
-        .orElseThrow(
-            () -> new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
+    BookItem bookItem =
+        bookItemRepository
+            .findById(id)
+            .filter(item -> item.getStatus() != BookItemStatus.DELETED)
+            .orElseThrow(
+                () ->
+                    new AppException(HttpStatus.NOT_FOUND, BookItemMessage.NOT_FOUND.getMessage()));
     if (bookItem.getStatus() == BookItemStatus.BORROWED) {
       throw new AppException(HttpStatus.CONFLICT, "Ban sach dang duoc muon, khong the xoa");
     }
@@ -204,11 +212,13 @@ public class BookItemServiceImpl implements BookItemService {
   }
 
   private Position getOrCreateDefaultPositionForShelf(UUID shelfId) {
-    Shelf shelf = shelfRepository
-        .findWithHierarchyById(shelfId) // dùng method có EntityGraph
-        .orElseThrow(() -> new AppException( // không tìm thấy → throw, KHÔNG fallback
-            HttpStatus.NOT_FOUND,
-            WarehouseMessage.SHELF_NOT_FOUND.getMessage()));
+    Shelf shelf =
+        shelfRepository
+            .findWithHierarchyById(shelfId) // dùng method có EntityGraph
+            .orElseThrow(
+                () ->
+                    new AppException( // không tìm thấy → throw, KHÔNG fallback
+                        HttpStatus.NOT_FOUND, WarehouseMessage.SHELF_NOT_FOUND.getMessage()));
 
     return getOrCreateDefaultPositionForShelf(shelf);
   }
@@ -227,12 +237,14 @@ public class BookItemServiceImpl implements BookItemService {
   }
 
   private Position getValidPositionOrThrow(UUID positionId) {
-    Position position = positionRepository
-        .findWithHierarchyById(positionId)
-        .orElseThrow(
-            () -> new AppException(
-                HttpStatus.NOT_FOUND,
-                BookItemMessage.SHELF_POSITION_NOT_FOUND.getMessage()));
+    Position position =
+        positionRepository
+            .findWithHierarchyById(positionId)
+            .orElseThrow(
+                () ->
+                    new AppException(
+                        HttpStatus.NOT_FOUND,
+                        BookItemMessage.SHELF_POSITION_NOT_FOUND.getMessage()));
     if (position.getShelf() == null) {
       throw new AppException(
           HttpStatus.BAD_REQUEST, BookItemMessage.INVALID_SHELF_POSITION.getMessage());
@@ -253,7 +265,8 @@ public class BookItemServiceImpl implements BookItemService {
       throw new AppException(HttpStatus.CONFLICT, "Khong duoc xoa ban sach bang PATCH");
     }
     if (bookItem.getStatus() == BookItemStatus.BORROWED && newStatus != BookItemStatus.BORROWED) {
-      throw new AppException(HttpStatus.CONFLICT, "Ban sach dang duoc muon, khong the doi trang thai");
+      throw new AppException(
+          HttpStatus.CONFLICT, "Ban sach dang duoc muon, khong the doi trang thai");
     }
   }
 

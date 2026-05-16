@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.warehouse.AisleStatus;
-import org.app.backend.modules.warehouse.dto.ShelfDTO;
 
 @Data
 @Builder
@@ -23,5 +22,5 @@ public class AisleDTO {
   String floorName;
   String name;
   AisleStatus status;
-  List<ShelfDTO> shelves = new ArrayList<>();
+  @Builder.Default List<ShelfDTO> shelves = new ArrayList<>();
 }

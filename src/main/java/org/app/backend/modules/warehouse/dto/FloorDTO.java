@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.warehouse.FloorStatus;
-import org.app.backend.modules.warehouse.dto.AisleDTO;
 
 @Data
 @Builder
@@ -21,5 +20,5 @@ public class FloorDTO {
   UUID id;
   String name;
   FloorStatus status;
-  List<AisleDTO> aisles = new ArrayList<>();
+  @Builder.Default List<AisleDTO> aisles = new ArrayList<>();
 }

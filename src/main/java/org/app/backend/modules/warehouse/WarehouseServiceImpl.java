@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -56,42 +55,35 @@ public class WarehouseServiceImpl implements WarehouseService {
   public List<FloorDTO> getWarehouseTree() {
     List<Floor> floors = floorRepository.findAll(Sort.by("name").ascending());
 
-    List<UUID> floorIds = floors.stream()
-        .map(Floor::getId)
-        .toList();
+    List<UUID> floorIds = floors.stream().map(Floor::getId).toList();
 
     List<Aisle> aisles = aisleRepository.findByFloorIdIn(floorIds);
 
-    List<UUID> aisleIds = aisles.stream()
-        .map(Aisle::getId)
-        .toList();
+    List<UUID> aisleIds = aisles.stream().map(Aisle::getId).toList();
 
-    List<Shelf> shelves = aisleIds.isEmpty()
-        ? List.of()
-        : shelfRepository.findByAisleIdIn(aisleIds);
+    List<Shelf> shelves =
+        aisleIds.isEmpty() ? List.of() : shelfRepository.findByAisleIdIn(aisleIds);
 
-    Map<UUID, List<ShelfDTO>> shelvesByAisleId = shelves.stream()
-        .map(this::toShelfDTO)
-        .collect(Collectors.groupingBy(ShelfDTO::getAisleId));
+    Map<UUID, List<ShelfDTO>> shelvesByAisleId =
+        shelves.stream().map(this::toShelfDTO).collect(Collectors.groupingBy(ShelfDTO::getAisleId));
 
-    Map<UUID, List<AisleDTO>> aislesByFloorId = aisles.stream()
-        .map(aisle -> {
-            AisleDTO dto = toAisleDTO(aisle);
-            dto.setShelves(
-                shelvesByAisleId.getOrDefault(aisle.getId(), List.of())
-            );
-            return dto;
-        })
-        .collect(Collectors.groupingBy(AisleDTO::getFloorId));
+    Map<UUID, List<AisleDTO>> aislesByFloorId =
+        aisles.stream()
+            .map(
+                aisle -> {
+                  AisleDTO dto = toAisleDTO(aisle);
+                  dto.setShelves(shelvesByAisleId.getOrDefault(aisle.getId(), List.of()));
+                  return dto;
+                })
+            .collect(Collectors.groupingBy(AisleDTO::getFloorId));
 
     return floors.stream()
-        .map(floor -> {
-            FloorDTO dto = modelMapper.map(floor, FloorDTO.class);
-            dto.setAisles(
-                aislesByFloorId.getOrDefault(floor.getId(), List.of())
-            );
-            return dto;
-        })
+        .map(
+            floor -> {
+              FloorDTO dto = modelMapper.map(floor, FloorDTO.class);
+              dto.setAisles(aislesByFloorId.getOrDefault(floor.getId(), List.of()));
+              return dto;
+            })
         .toList();
   }
 
@@ -311,10 +303,7 @@ public class WarehouseServiceImpl implements WarehouseService {
   }
 
   private PositionDTO toPositionDTO(Position position) {
-    return PositionDTO.builder()
-        .id(position.getId())
-        .bookCount(position.getBookCount())
-        .build();
+    return PositionDTO.builder().id(position.getId()).bookCount(position.getBookCount()).build();
   }
 
   private void log(
@@ -343,8 +332,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     if (!shelfRepository.existsById(shelfId)) {
       throw new AppException(HttpStatus.NOT_FOUND, WarehouseMessage.SHELF_NOT_FOUND.getMessage());
     }
-    return positionRepository.findByShelfId(shelfId).stream()
-        .map(this::toPositionDTO)
-        .toList();
+    return positionRepository.findByShelfId(shelfId).stream().map(this::toPositionDTO).toList();
   }
 }

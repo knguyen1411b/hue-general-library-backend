@@ -19,7 +19,6 @@ import org.app.backend.modules.warehouse.dto.PositionDTO;
 import org.app.backend.modules.warehouse.entity.Aisle;
 import org.app.backend.modules.warehouse.entity.Floor;
 import org.app.backend.modules.warehouse.entity.Position;
-import org.app.backend.modules.warehouse.entity.Shelf;
 import org.app.backend.modules.warehouse.repository.AisleRepository;
 import org.app.backend.modules.warehouse.repository.FloorRepository;
 import org.app.backend.modules.warehouse.repository.PositionRepository;
@@ -185,8 +184,7 @@ class WarehouseServiceImplTest {
     position2.setBookCount(0);
 
     when(shelfRepository.existsById(shelfId)).thenReturn(true);
-    when(positionRepository.findByShelfId(shelfId))
-        .thenReturn(List.of(position1, position2));
+    when(positionRepository.findByShelfId(shelfId)).thenReturn(List.of(position1, position2));
 
     List<PositionDTO> result = warehouseService.getPositionsByShelfId(shelfId);
 

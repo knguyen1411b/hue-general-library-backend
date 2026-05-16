@@ -29,7 +29,6 @@ import org.app.backend.modules.warehouse.dto.FloorUpdateDTO;
 import org.app.backend.modules.warehouse.dto.PositionDTO;
 import org.app.backend.modules.warehouse.dto.ShelfDTO;
 import org.app.backend.modules.warehouse.dto.SimpleFloorDTO;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

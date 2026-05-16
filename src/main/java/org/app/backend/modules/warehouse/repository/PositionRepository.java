@@ -12,9 +12,9 @@ import org.springframework.stereotype.Repository;
 public interface PositionRepository extends JpaRepository<Position, UUID> {
   List<Position> findByShelfId(UUID shelfId);
 
-  @EntityGraph(attributePaths = { "shelf", "shelf.aisle", "shelf.aisle.floor" })
+  @EntityGraph(attributePaths = {"shelf", "shelf.aisle", "shelf.aisle.floor"})
   Optional<Position> findFirstByShelfId(UUID shelfId);
 
-  @EntityGraph(attributePaths = { "shelf", "shelf.aisle", "shelf.aisle.floor" })
+  @EntityGraph(attributePaths = {"shelf", "shelf.aisle", "shelf.aisle.floor"})
   Optional<Position> findWithHierarchyById(UUID id);
 }

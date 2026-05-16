@@ -18,8 +18,7 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 
   List<UserSubscription> findByStatusNot(UserSubscriptionStatus status);
 
-  List<UserSubscription> findByUser_IdAndStatusNot(
-      UUID userId, UserSubscriptionStatus status);
+  List<UserSubscription> findByUser_IdAndStatusNot(UUID userId, UserSubscriptionStatus status);
 
   List<UserSubscription> findBySubscription_Id(UUID subscriptionId);
 

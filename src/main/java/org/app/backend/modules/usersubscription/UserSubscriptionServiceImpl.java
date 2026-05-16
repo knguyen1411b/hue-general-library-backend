@@ -40,7 +40,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             .orElseThrow(
                 () ->
                     new AppException(
-                        HttpStatus.BAD_REQUEST, UserSubscriptionMessage.USER_NOT_FOUND.getMessage()));
+                        HttpStatus.BAD_REQUEST,
+                        UserSubscriptionMessage.USER_NOT_FOUND.getMessage()));
 
     Subscription managedSubscription =
         subscriptionRepository
@@ -54,11 +55,9 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     if (userSubscriptionRepository.existsByUser_IdAndStatus(
         managedUser.getId(), UserSubscriptionStatus.ACTIVE)) {
       throw new AppException(
-          HttpStatus.BAD_REQUEST,
-          UserSubscriptionMessage.USER_ALREADY_HAS_ACTIVE.getMessage()
-      );
+          HttpStatus.BAD_REQUEST, UserSubscriptionMessage.USER_ALREADY_HAS_ACTIVE.getMessage());
     }
-    
+
     LocalDate startDate = LocalDate.now();
     LocalDate endDate = startDate.plusDays(managedSubscription.getDurationDays());
 
@@ -178,14 +177,12 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
     if (actor.getRole() != UserRole.USER) {
       throw new AppException(
-          HttpStatus.FORBIDDEN,
-          UserSubscriptionMessage.ACCESS_DENIED_UPDATE_OTHER.getMessage());
+          HttpStatus.FORBIDDEN, UserSubscriptionMessage.ACCESS_DENIED_UPDATE_OTHER.getMessage());
     }
 
     if (!existing.getUser().getId().equals(actor.getId())) {
       throw new AppException(
-          HttpStatus.FORBIDDEN,
-          UserSubscriptionMessage.ACCESS_DENIED_UPDATE_OTHER.getMessage());
+          HttpStatus.FORBIDDEN, UserSubscriptionMessage.ACCESS_DENIED_UPDATE_OTHER.getMessage());
     }
 
     if (dto.getStartDate() != null) {

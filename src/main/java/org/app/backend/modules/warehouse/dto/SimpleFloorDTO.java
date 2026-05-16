@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.modules.warehouse.FloorStatus;
 
-
 @Data
 @Builder
 @NoArgsConstructor
