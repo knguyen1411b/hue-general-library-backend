@@ -14,14 +14,17 @@ import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.subscription.dto.SubscriptionCreateDTO;
 import org.app.backend.modules.subscription.dto.SubscriptionDTO;
 import org.app.backend.modules.subscription.dto.SubscriptionUpdateDTO;
+import org.app.backend.modules.user.UserRole;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SubscriptionServiceImpl implements SubscriptionService {
@@ -186,8 +189,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       throw new AppException(
           HttpStatus.UNAUTHORIZED, "Yêu cầu xác thực để thực hiện thao tác " + action);
     }
-    // TODO: Implement actual role/permission check
-    // For now, allow all authenticated users
+    if (actor.getRole() != UserRole.ADMIN && actor.getRole() != UserRole.MANAGER) {
+      throw new AppException(
+          HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện thao tác " + action);
+    }
   }
 
   private void validatePositive(Integer value, String fieldName) {

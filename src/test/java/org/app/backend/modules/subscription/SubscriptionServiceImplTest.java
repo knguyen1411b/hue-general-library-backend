@@ -16,6 +16,7 @@ import org.app.backend.modules.audit.enums.AuditLogStatus;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.subscription.dto.SubscriptionCreateDTO;
 import org.app.backend.modules.subscription.dto.SubscriptionDTO;
+import org.app.backend.modules.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceImplTest {
@@ -50,6 +52,7 @@ class SubscriptionServiceImplTest {
     mockActor = new CustomUserDetails();
     mockActor.setId(UUID.randomUUID());
     mockActor.setUsername("admin");
+    mockActor.setRole(UserRole.ADMIN);
   }
 
   @Test
@@ -115,6 +118,36 @@ class SubscriptionServiceImplTest {
     when(subscriptionRepository.existsByKey("BASIC")).thenReturn(true);
 
     assertThrows(AppException.class, () -> subscriptionService.create(dto, mockActor));
+    verify(subscriptionRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("Create Subscription - Unauthorized when actor is null")
+  void testCreate_Unauthorized_WhenActorNull() {
+    SubscriptionCreateDTO dto = new SubscriptionCreateDTO();
+    dto.setKey("premium");
+    dto.setName("Premium Plan");
+
+    AppException ex = assertThrows(AppException.class, () -> subscriptionService.create(dto, null));
+    assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    verify(subscriptionRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("Create Subscription - Forbidden for USER role")
+  void testCreate_Forbidden_WhenActorHasUserRole() {
+    SubscriptionCreateDTO dto = new SubscriptionCreateDTO();
+    dto.setKey("premium");
+    dto.setName("Premium Plan");
+
+    CustomUserDetails userActor = new CustomUserDetails();
+    userActor.setId(UUID.randomUUID());
+    userActor.setUsername("normal-user");
+    userActor.setRole(UserRole.USER);
+
+    AppException ex =
+        assertThrows(AppException.class, () -> subscriptionService.create(dto, userActor));
+    assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
     verify(subscriptionRepository, never()).save(any());
   }
 

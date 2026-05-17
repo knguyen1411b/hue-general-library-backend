@@ -1,17 +1,25 @@
 package org.app.backend.config;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import org.app.backend.common.exception.CustomAccessDeniedHandler;
 import org.app.backend.common.exception.CustomAuthenticationEntryPoint;
 import org.app.backend.modules.auth.filter.JwtAuthenticationFilter;
 import org.app.backend.modules.auth.security.JwtService;
 import org.app.backend.modules.user.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -35,6 +43,10 @@ public class AppSecurityConfig {
   JwtService jwtService;
   CustomAccessDeniedHandler customAccessDeniedHandler;
   CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+  @NonFinal
+  @Value("${application.security.cors.allowed-origin-patterns}")
+  String allowedOriginPatterns;
 
   static String[] SWAGGER_WHITELIST = {"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
   static String[] PUBLIC_ENDPOINTS = {"/"};
@@ -86,16 +98,27 @@ public class AppSecurityConfig {
   }
 
   @Bean
-  CorsConfigurationSource corsConfigurationSource() { // ← BEAN MỚI THAY THẾ
+  RoleHierarchy roleHierarchy() {
+    return RoleHierarchyImpl.fromHierarchy(
+        """
+        ROLE_ADMIN > ROLE_MANAGER
+        ROLE_MANAGER > ROLE_USER
+        """);
+  }
+
+  @Bean
+  MethodSecurityExpressionHandler methodSecurityExpressionHandler(RoleHierarchy roleHierarchy) {
+    DefaultMethodSecurityExpressionHandler expressionHandler =
+        new DefaultMethodSecurityExpressionHandler();
+    expressionHandler.setRoleHierarchy(roleHierarchy);
+    return expressionHandler;
+  }
+
+  @Bean
+  CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration cors = new CorsConfiguration();
     cors.setAllowCredentials(true);
-    cors.setAllowedOriginPatterns(
-        List.of(
-            "http://localhost:*",
-            "http://127.0.0.1:*",
-            "https://localhost:*",
-            "https://127.0.0.1:*",
-            "https://*.app.github.dev"));
+    cors.setAllowedOriginPatterns(parseAllowedOriginPatterns());
     cors.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
     cors.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
     cors.setExposedHeaders(List.of("Authorization"));
@@ -103,5 +126,12 @@ public class AppSecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", cors);
     return source;
+  }
+
+  private List<String> parseAllowedOriginPatterns() {
+    return Arrays.stream(allowedOriginPatterns.split(","))
+        .map(String::trim)
+        .filter(pattern -> !pattern.isBlank())
+        .collect(Collectors.toList());
   }
 }

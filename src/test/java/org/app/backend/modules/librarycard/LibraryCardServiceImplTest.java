@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 import java.util.UUID;
 import org.app.backend.modules.auth.security.CustomUserDetails;
+import org.app.backend.modules.librarycard.dto.LibraryCardCreateDTO;
 import org.app.backend.modules.librarycard.dto.LibraryCardDTO;
 import org.app.backend.modules.librarycardrequest.LibraryCardRequestRepository;
 import org.app.backend.modules.user.UserRepository;
@@ -74,27 +76,33 @@ class LibraryCardServiceImplTest {
     assertEquals("Library card not found", ex.getMessage());
   }
 
-  // @Test
-  // @DisplayName("Create Library Card - Success")
-  // void testCreate_Success() {
-  // LibraryCardCreateDTO dto = new LibraryCardCreateDTO();
-  // dto.setStatus(CardStatus.ACTIVE);
+  @Test
+  @DisplayName("Create Library Card - Success")
+  void testCreate_Success() {
+    LibraryCardCreateDTO dto = new LibraryCardCreateDTO();
+    dto.setUserId(UUID.randomUUID());
+    dto.setStatus(CardStatus.ACTIVE);
+    dto.setIssueDate(java.time.LocalDate.now());
+    dto.setExpiryDate(java.time.LocalDate.now().plusYears(1));
 
-  // LibraryCard mappedCard = new LibraryCard();
-  // mappedCard.setId(UUID.randomUUID());
-  // LibraryCardDTO resultDto = new LibraryCardDTO();
+    LibraryCardDTO resultDto = new LibraryCardDTO();
+    resultDto.setStatus(CardStatus.ACTIVE);
 
-  // when(modelMapper.map(dto, LibraryCard.class)).thenReturn(mappedCard);
-  // when(libraryCardRepository.save(mappedCard)).thenReturn(mappedCard);
-  // when(modelMapper.map(mappedCard,
-  // LibraryCardDTO.class)).thenReturn(resultDto);
+    when(libraryCardRepository.save(any(LibraryCard.class)))
+        .thenAnswer(
+            invocation -> {
+              LibraryCard card = invocation.getArgument(0);
+              card.setId(UUID.randomUUID());
+              return card;
+            });
+    when(modelMapper.map(any(LibraryCard.class), eq(LibraryCardDTO.class))).thenReturn(resultDto);
 
-  // LibraryCardDTO result = libraryCardService.create(dto, mockActor);
+    LibraryCardDTO result = libraryCardService.create(dto, mockActor);
 
-  // assertNotNull(result);
-  // verify(libraryCardRepository, times(1)).save(mappedCard);
-  // assertEquals(CardStatus.ACTIVE, mappedCard.getStatus());
-  // }
+    assertNotNull(result);
+    verify(libraryCardRepository, times(1)).save(any(LibraryCard.class));
+    assertEquals(CardStatus.ACTIVE, result.getStatus());
+  }
 
   @Test
   @DisplayName("Lock Library Card - Blocks card")

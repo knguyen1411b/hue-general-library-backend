@@ -4,7 +4,6 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.app.backend.modules.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LibraryCardRequestServiceImpl implements LibraryCardRequestService {
   LibraryCardRequestRepository requestRepository;
-  UserRepository userRepository;
 
   @Override
   @Transactional

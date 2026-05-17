@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public Page<UserDTO> findAll(UserFilterDTO filter, Pageable pageable) {
     Specification<User> spec = UserSpecification.filter(filter);
     return userRepository.findAll(spec, pageable).map(user -> modelMapper.map(user, UserDTO.class));
@@ -112,7 +112,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public UserDTO findById(UUID id) {
     return userRepository
         .findById(id)
@@ -123,7 +123,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void create(@NonNull UserCreateDTO dto, CustomUserDetails actor) {
     validateUsernameAvailability(dto.getUsername());
     validateEmailAvailability(dto.getEmail(), null);
@@ -160,7 +160,7 @@ public class UserServiceImpl implements UserService {
   @Override
   @Transactional
   @CacheEvict(value = "userDetails", key = "#id")
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void update(UUID id, UserUpdateDTO dto, CustomUserDetails actor) {
     User user =
         userRepository
@@ -250,7 +250,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void delete(UUID id, CustomUserDetails actor) {
     User user =
         userRepository

@@ -45,7 +45,7 @@ public class BookItemServiceImpl implements BookItemService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','USER')")
+  @PreAuthorize("hasRole('USER')")
   public Page<BookItemDTO> findAll(BookItemFilterDTO filter, Pageable pageable) {
     Specification<BookItem> spec = BookItemSpecification.filter(filter);
     return bookItemRepository
@@ -58,7 +58,7 @@ public class BookItemServiceImpl implements BookItemService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','USER')")
+  @PreAuthorize("hasRole('USER')")
   public BookItemDTO findById(UUID id) {
     BookItem bookItem =
         bookItemRepository
@@ -72,7 +72,7 @@ public class BookItemServiceImpl implements BookItemService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void create(@NonNull BookItemCreateDTO dto, CustomUserDetails actor) {
     validateBarcodeFormat(dto.getBarcode());
     validateBarcodeAvailability(dto.getBarcode());
@@ -108,7 +108,7 @@ public class BookItemServiceImpl implements BookItemService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void update(UUID id, BookItemUpdateDTO dto, CustomUserDetails actor) {
     BookItem bookItem =
         bookItemRepository
@@ -150,7 +150,7 @@ public class BookItemServiceImpl implements BookItemService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void delete(UUID id, CustomUserDetails actor) {
     BookItem bookItem =
         bookItemRepository
@@ -234,23 +234,6 @@ public class BookItemServiceImpl implements BookItemService {
               position.setShelf(shelf);
               return positionRepository.save(position);
             });
-  }
-
-  private Position getValidPositionOrThrow(UUID positionId) {
-    Position position =
-        positionRepository
-            .findWithHierarchyById(positionId)
-            .orElseThrow(
-                () ->
-                    new AppException(
-                        HttpStatus.NOT_FOUND,
-                        BookItemMessage.SHELF_POSITION_NOT_FOUND.getMessage()));
-    if (position.getShelf() == null) {
-      throw new AppException(
-          HttpStatus.BAD_REQUEST, BookItemMessage.INVALID_SHELF_POSITION.getMessage());
-    }
-    validateShelfHierarchy(position.getShelf());
-    return position;
   }
 
   private void validateShelfHierarchy(Shelf shelf) {

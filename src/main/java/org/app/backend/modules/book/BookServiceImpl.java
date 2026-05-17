@@ -79,7 +79,7 @@ public class BookServiceImpl implements BookService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void create(@NonNull BookCreateDTO dto, CustomUserDetails actor) {
     validateIsbnAvailability(dto.getIsbn(), null);
 
@@ -117,7 +117,7 @@ public class BookServiceImpl implements BookService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void update(UUID id, BookUpdateDTO dto, CustomUserDetails actor) {
     Book book =
         bookRepository
@@ -182,7 +182,7 @@ public class BookServiceImpl implements BookService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void delete(UUID id, CustomUserDetails actor) {
     Book book =
         bookRepository

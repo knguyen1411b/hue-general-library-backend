@@ -51,7 +51,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public List<FloorDTO> getWarehouseTree() {
     List<Floor> floors = floorRepository.findAll(Sort.by("name").ascending());
 
@@ -89,7 +89,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public FloorDTO createFloor(FloorCreateDTO dto, CustomUserDetails actor) {
     validateFloorNameAvailability(dto.getName(), null);
 
@@ -101,7 +101,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public FloorDTO updateFloor(UUID id, FloorUpdateDTO dto, CustomUserDetails actor) {
     Floor floor = getFloorEntityOrThrow(id);
 
@@ -124,7 +124,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void deleteFloor(UUID id, CustomUserDetails actor) {
     Floor floor = getFloorEntityOrThrow(id);
     floor.setStatus(FloorStatus.INACTIVE);
@@ -134,14 +134,14 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public FloorDTO getFloorById(UUID id) {
     return modelMapper.map(getFloorEntityOrThrow(id), FloorDTO.class);
   }
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public List<SimpleFloorDTO> getAllFloors() {
     return floorRepository.findAll().stream()
         .map(floor -> modelMapper.map(floor, SimpleFloorDTO.class))
@@ -150,7 +150,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public AisleDTO createAisle(AisleCreateDTO dto, CustomUserDetails actor) {
     Floor floor = getFloorEntityOrThrow(dto.getFloorId());
     validateAisleNameAvailability(dto.getFloorId(), dto.getName(), null);
@@ -167,7 +167,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public AisleDTO updateAisle(UUID id, AisleUpdateDTO dto, CustomUserDetails actor) {
     Aisle aisle = getAisleEntityOrThrow(id);
 
@@ -196,7 +196,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void deleteAisle(UUID id, CustomUserDetails actor) {
     Aisle aisle = getAisleEntityOrThrow(id);
     aisle.setStatus(AisleStatus.INACTIVE);
@@ -206,21 +206,21 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public AisleDTO getAisleById(UUID id) {
     return toAisleDTO(getAisleEntityOrThrow(id));
   }
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public List<AisleDTO> getAllAisles() {
     return aisleRepository.findAll().stream().map(this::toAisleDTO).toList();
   }
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public ShelfDTO createShelf(AddShelfDTO dto, CustomUserDetails actor) {
     Aisle aisle = getAisleEntityOrThrow(dto.getAisleId());
 
@@ -235,7 +235,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public void deleteShelf(UUID id, CustomUserDetails actor) {
     Shelf shelf =
         shelfRepository
@@ -320,14 +320,14 @@ public class WarehouseServiceImpl implements WarehouseService {
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public List<ShelfDTO> getAllShelves() {
     return shelfRepository.findAll().stream().map(this::toShelfDTO).toList();
   }
 
   @Override
   @Transactional(readOnly = true)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasRole('MANAGER')")
   public List<PositionDTO> getPositionsByShelfId(UUID shelfId) {
     if (!shelfRepository.existsById(shelfId)) {
       throw new AppException(HttpStatus.NOT_FOUND, WarehouseMessage.SHELF_NOT_FOUND.getMessage());

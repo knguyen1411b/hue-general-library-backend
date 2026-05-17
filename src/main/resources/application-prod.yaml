@@ -10,7 +10,7 @@ application:
       accessTokenExpiration: ${JWT_ACCESS_EXPIRATION}
       refreshTokenExpiration: ${JWT_REFRESH_EXPIRATION}
     cors:
-      allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,https://localhost:*,https://127.0.0.1:*,https://*.app.github.dev}
+      allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS}
 
 cloudinary:
   cloudName: ${CLOUDINARY_CLOUD_NAME}
@@ -30,7 +30,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -68,7 +68,10 @@ spring:
         queue-capacity: ${THREAD_POOL_QUEUE_CAPACITY}
 
 springdoc:
+  api-docs:
+    enabled: false
   swagger-ui:
+    enabled: false
     default-model-expand-depth: 0
     defaultModelsExpandDepth: 0
     tags-sorter: alpha

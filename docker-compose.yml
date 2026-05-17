@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    container_name: hue-library-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hue_library
+      POSTGRES_USER: hue_library
+      POSTGRES_PASSWORD: hue_library
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hue-library-backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:

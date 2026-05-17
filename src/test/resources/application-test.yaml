@@ -41,6 +41,8 @@ application:
       secretKey: supersecretkeysupersecretkeysupersecretkeysupersecretkey
       accessTokenExpiration: 3600000
       refreshTokenExpiration: 86400000
+    cors:
+      allowed-origin-patterns: http://localhost:3000,http://127.0.0.1:3000
 
 cloudinary:
   cloudName: test
