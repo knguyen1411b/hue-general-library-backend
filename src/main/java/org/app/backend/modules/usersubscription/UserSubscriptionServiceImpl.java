@@ -52,13 +52,29 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
                         HttpStatus.BAD_REQUEST,
                         UserSubscriptionMessage.SUBSCRIPTION_NOT_FOUND.getMessage()));
 
-    if (userSubscriptionRepository.existsByUser_IdAndStatus(
-        managedUser.getId(), UserSubscriptionStatus.ACTIVE)) {
-      throw new AppException(
-          HttpStatus.BAD_REQUEST, UserSubscriptionMessage.USER_ALREADY_HAS_ACTIVE.getMessage());
+    LocalDate today = LocalDate.now();
+    markExpiredSubscriptions(managedUser.getId(), today);
+
+    var maybeActiveSubscription = userSubscriptionRepository.findActiveSubscriptionByUserId(managedUser.getId());
+    UserSubscription activeSubscription =
+        maybeActiveSubscription != null ? maybeActiveSubscription.orElse(null) : null;
+
+    if (activeSubscription != null) {
+      LocalDate extendedEndDate =
+          (activeSubscription.getEndDate().isAfter(today) ? activeSubscription.getEndDate() : today)
+              .plusDays(managedSubscription.getDurationDays());
+
+      activeSubscription.setSubscription(managedSubscription);
+      activeSubscription.setEndDate(extendedEndDate);
+      activeSubscription.setStatus(UserSubscriptionStatus.ACTIVE);
+      activeSubscription.setMaxBooks(managedSubscription.getMaxBooks());
+      activeSubscription.setPrice(managedSubscription.getPrice());
+
+      UserSubscription saved = userSubscriptionRepository.save(activeSubscription);
+      return modelMapper.map(saved, UserSubscriptionResponseDTO.class);
     }
 
-    LocalDate startDate = LocalDate.now();
+    LocalDate startDate = today;
     LocalDate endDate = startDate.plusDays(managedSubscription.getDurationDays());
 
     UserSubscription entity =
@@ -106,15 +122,33 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
   public UserSubscriptionResponseDTO update(
       UUID id, UserSubscriptionUpdateDTO dto, CustomUserDetails actor) {
     UserSubscription existing = getEntity(id);
+    LocalDate today = LocalDate.now();
 
     validateUserUpdatePermission(existing, dto, actor);
+    markExpiredSubscription(existing, today);
+
+    boolean userRenewRequest =
+        actor != null
+            && actor.getRole() == UserRole.USER
+            && dto.getEndDate() != null
+            && dto.getStatus() == null
+            && dto.getStartDate() == null;
 
     if (dto.getStartDate() != null) {
       existing.setStartDate(dto.getStartDate());
     }
 
     if (dto.getEndDate() != null) {
-      existing.setEndDate(dto.getEndDate());
+      if (userRenewRequest) {
+        LocalDate renewalBaseDate = existing.getEndDate().isAfter(today) ? existing.getEndDate() : today;
+        LocalDate renewedEndDate =
+            renewalBaseDate.plusDays(existing.getSubscription().getDurationDays());
+
+        existing.setEndDate(renewedEndDate);
+        existing.setStatus(UserSubscriptionStatus.ACTIVE);
+      } else {
+        existing.setEndDate(dto.getEndDate());
+      }
     }
 
     if (dto.getStatus() != null) {
@@ -196,17 +230,27 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
           HttpStatus.FORBIDDEN, UserSubscriptionMessage.ACCESS_DENIED_UPDATE_STATUS.getMessage());
     }
 
-    if (dto.getEndDate() != null) {
-      if (dto.getEndDate().isBefore(LocalDate.now())) {
-        throw new AppException(
-            HttpStatus.BAD_REQUEST, UserSubscriptionMessage.INVALID_RENEW_END_DATE.getMessage());
-      }
+    // USER chỉ được gửi yêu cầu gia hạn bằng endDate, service sẽ tự cộng theo durationDays gói.
+  }
 
-      if (!dto.getEndDate().isAfter(existing.getEndDate())) {
-        throw new AppException(
-            HttpStatus.BAD_REQUEST,
-            UserSubscriptionMessage.RENEW_END_DATE_NOT_EXTENDED.getMessage());
-      }
+  private void markExpiredSubscriptions(UUID userId, LocalDate today) {
+    List<UserSubscription> expiredActiveSubscriptions =
+        userSubscriptionRepository.findByUser_IdAndStatusAndEndDateBefore(
+            userId, UserSubscriptionStatus.ACTIVE, today);
+
+    if (expiredActiveSubscriptions == null || expiredActiveSubscriptions.isEmpty()) {
+      return;
+    }
+
+    expiredActiveSubscriptions.forEach(subscription -> subscription.setStatus(UserSubscriptionStatus.EXPIRED));
+    userSubscriptionRepository.saveAll(expiredActiveSubscriptions);
+  }
+
+  private void markExpiredSubscription(UserSubscription subscription, LocalDate today) {
+    if (subscription.getStatus() == UserSubscriptionStatus.ACTIVE
+        && subscription.getEndDate() != null
+        && subscription.getEndDate().isBefore(today)) {
+      subscription.setStatus(UserSubscriptionStatus.EXPIRED);
     }
   }
 

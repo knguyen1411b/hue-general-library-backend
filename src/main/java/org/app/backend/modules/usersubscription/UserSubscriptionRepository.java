@@ -26,13 +26,16 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 
   List<UserSubscription> findByUser_IdAndStatus(UUID userId, UserSubscriptionStatus status);
 
+  List<UserSubscription> findByUser_IdAndStatusAndEndDateBefore(
+      UUID userId, UserSubscriptionStatus status, LocalDate date);
+
+  Optional<UserSubscription> findTopByUser_IdAndStatusAndEndDateGreaterThanEqualOrderByEndDateDesc(
+      UUID userId, UserSubscriptionStatus status, LocalDate date);
+
   long countByStatus(UserSubscriptionStatus status);
 
-  Optional<UserSubscription> findTopByUser_IdAndEndDateAfterOrderByEndDateDesc(
-      UUID userId, LocalDate now);
-
   default Optional<UserSubscription> findActiveSubscriptionByUserId(UUID userId) {
-    return findTopByUser_IdAndEndDateAfterOrderByEndDateDesc(userId, LocalDate.now())
-        .filter(sub -> sub.getStatus() == UserSubscriptionStatus.ACTIVE);
+    return findTopByUser_IdAndStatusAndEndDateGreaterThanEqualOrderByEndDateDesc(
+        userId, UserSubscriptionStatus.ACTIVE, LocalDate.now());
   }
 }
