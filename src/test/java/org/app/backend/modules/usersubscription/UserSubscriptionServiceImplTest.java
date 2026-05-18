@@ -73,8 +73,11 @@ class UserSubscriptionServiceImplTest {
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(subscriptionRepository.findById(subscriptionId)).thenReturn(Optional.of(subscription));
-    when(userSubscriptionRepository.existsByUser_IdAndStatus(userId, UserSubscriptionStatus.ACTIVE))
-        .thenReturn(false);
+    when(userSubscriptionRepository.findByUser_IdAndStatusAndEndDateBefore(
+            eq(userId), eq(UserSubscriptionStatus.ACTIVE), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(userSubscriptionRepository.findActiveSubscriptionByUserId(userId))
+        .thenReturn(Optional.empty());
     when(userSubscriptionRepository.save(any(UserSubscription.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
     when(modelMapper.map(any(UserSubscription.class), eq(UserSubscriptionResponseDTO.class)))
@@ -114,16 +117,29 @@ class UserSubscriptionServiceImplTest {
   }
 
   @Test
-  @DisplayName("Create - existing ACTIVE subscription throws AppException")
-  void create_userAlreadyHasActive_throwsException() {
+  @DisplayName("Create - existing ACTIVE subscription extends endDate, does not create duplicate")
+  void create_userAlreadyHasActive_renewsExisting() {
     UserSubscriptionCreateDTO dto = new UserSubscriptionCreateDTO(userId, subscriptionId);
+    UserSubscription existing = activeEntity(UUID.randomUUID(), user);
+    LocalDate oldEndDate = existing.getEndDate();
+    UserSubscriptionResponseDTO responseDTO = response(existing.getId());
+
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(subscriptionRepository.findById(subscriptionId)).thenReturn(Optional.of(subscription));
-    when(userSubscriptionRepository.existsByUser_IdAndStatus(userId, UserSubscriptionStatus.ACTIVE))
-        .thenReturn(true);
+    when(userSubscriptionRepository.findByUser_IdAndStatusAndEndDateBefore(
+            eq(userId), eq(UserSubscriptionStatus.ACTIVE), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(userSubscriptionRepository.findActiveSubscriptionByUserId(userId))
+        .thenReturn(Optional.of(existing));
+    when(userSubscriptionRepository.save(existing)).thenReturn(existing);
+    when(modelMapper.map(existing, UserSubscriptionResponseDTO.class)).thenReturn(responseDTO);
 
-    assertThrows(AppException.class, () -> userSubscriptionService.create(dto));
-    verify(userSubscriptionRepository, never()).save(any());
+    UserSubscriptionResponseDTO result = userSubscriptionService.create(dto);
+
+    assertSame(responseDTO, result);
+    assertEquals(UserSubscriptionStatus.ACTIVE, existing.getStatus());
+    assertTrue(existing.getEndDate().isAfter(oldEndDate));
+    verify(userSubscriptionRepository, never()).save(argThat(sub -> sub.getId() == null));
   }
 
   @Test
@@ -292,19 +308,25 @@ class UserSubscriptionServiceImplTest {
   }
 
   @Test
-  @DisplayName("Update - USER cannot renew to past endDate")
-  void update_userCannotRenewToPastEndDate() {
+  @DisplayName("Update - USER renewal request extends by subscription duration even if payload endDate is past")
+  void update_userRenewRequestIgnoresPayloadEndDate() {
     UUID entityId = UUID.randomUUID();
     UserSubscription entity = activeEntity(entityId, user);
+    LocalDate originalEndDate = entity.getEndDate();
     UserSubscriptionUpdateDTO updateDTO =
         UserSubscriptionUpdateDTO.builder().endDate(LocalDate.now().minusDays(1)).build();
+    UserSubscriptionResponseDTO responseDTO = response(entityId);
 
     when(userSubscriptionRepository.findById(entityId)).thenReturn(Optional.of(entity));
+    when(userSubscriptionRepository.save(entity)).thenReturn(entity);
+    when(modelMapper.map(entity, UserSubscriptionResponseDTO.class)).thenReturn(responseDTO);
 
-    assertThrows(
-        AppException.class,
-        () -> userSubscriptionService.update(entityId, updateDTO, actor(userId, UserRole.USER)));
-    verify(userSubscriptionRepository, never()).save(any());
+    UserSubscriptionResponseDTO result =
+        userSubscriptionService.update(entityId, updateDTO, actor(userId, UserRole.USER));
+
+    assertSame(responseDTO, result);
+    assertEquals(originalEndDate.plusDays(subscription.getDurationDays()), entity.getEndDate());
+    assertEquals(UserSubscriptionStatus.ACTIVE, entity.getStatus());
   }
 
   @Test

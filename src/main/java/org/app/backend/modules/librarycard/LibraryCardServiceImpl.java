@@ -4,6 +4,7 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.app.backend.common.exception.AppException;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.librarycard.dto.LibraryCardCreateDTO;
 import org.app.backend.modules.librarycard.dto.LibraryCardDTO;
@@ -11,6 +12,7 @@ import org.app.backend.modules.librarycard.dto.LibraryCardUpdateDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +50,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Library card not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     return modelMapper.map(card, LibraryCardDTO.class);
   }
 
@@ -70,7 +72,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Library card not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     if (dto.getIssueDate() != null) card.setIssueDate(dto.getIssueDate());
     if (dto.getExpiryDate() != null) card.setExpiryDate(dto.getExpiryDate());
     if (dto.getStatus() != null) card.setStatus(dto.getStatus());
@@ -84,7 +86,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Library card not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     libraryCardRepository.delete(card);
   }
 
@@ -94,7 +96,7 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Library card not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     card.setStatus(CardStatus.BLOCKED);
     LibraryCard saved = libraryCardRepository.save(card);
     return modelMapper.map(saved, LibraryCardDTO.class);
@@ -108,7 +110,16 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     org.app.backend.modules.user.User u =
         userRepository
             .findById(user.getId())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+
+    if (requestRepository.existsByUserIdAndStatus(
+            user.getId(),
+            org.app.backend.modules.librarycardrequest.LibraryCardRequestStatus.PENDING)) {
+      throw new AppException(
+          HttpStatus.BAD_REQUEST,
+          "Bạn đã có yêu cầu cấp thẻ đang chờ xử lý. Vui lòng chờ thủ thư phê duyệt.");
+    }
+
     org.app.backend.modules.librarycardrequest.LibraryCardRequest request =
         org.app.backend.modules.librarycardrequest.LibraryCardRequest.builder()
             .user(u)
@@ -125,14 +136,12 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard oldCard =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Library card not found"));
-    // Create new card with same user
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     LibraryCard newCard = new LibraryCard();
     newCard.setUserId(oldCard.getUserId());
     newCard.setIssueDate(java.time.LocalDate.now());
     newCard.setExpiryDate(java.time.LocalDate.now().plusYears(1));
     newCard.setStatus(CardStatus.ACTIVE);
-    // Invalidate old card
     oldCard.setStatus(CardStatus.INACTIVE);
     libraryCardRepository.save(oldCard);
     LibraryCard saved = libraryCardRepository.save(newCard);

@@ -1,14 +1,21 @@
 package org.app.backend.modules.audit.enums;
 
 public enum AuditLogEntity {
-  USER,
-  AUTH,
-  ORDER,
-  SUBSCRIPTION,
-  CATEGORY,
-  BOOK,
-  BOOK_ITEM,
-  RENTAL,
-  FINE,
-  WAREHOUSE
+    USER,
+    AUTH,
+    ORDER,
+    SUBSCRIPTION,
+    USER_SUBSCRIPTION,
+    CATEGORY,
+    BOOK,
+    BOOK_ITEM,
+    RENTAL,
+    FINE,
+    PAYMENT,
+    LIBRARY_CARD,
+    LIBRARY_CARD_REQUEST,
+    WAREHOUSE,
+    NOTIFICATION,
+    CONFIGURATION,
+    REPORT
 }
