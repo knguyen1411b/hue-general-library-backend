@@ -7,6 +7,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.common.exception.AppException;
+import org.app.backend.modules.audit.AuditLogService;
+import org.app.backend.modules.audit.enums.AuditLogAction;
+import org.app.backend.modules.audit.enums.AuditLogEntity;
+import org.app.backend.modules.audit.enums.AuditLogStatus;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.Book;
 import org.app.backend.modules.book.BookRepository;
@@ -22,6 +26,8 @@ import org.app.backend.modules.rental.enums.RentalStatus;
 import org.app.backend.modules.usersubscription.UserSubscription;
 import org.app.backend.modules.usersubscription.UserSubscriptionRepository;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -33,12 +39,15 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RentalServiceImpl implements RentalService {
 
+    private static final Logger log = LoggerFactory.getLogger(RentalServiceImpl.class);
+
     RentalRepository rentalRepository;
     ModelMapper modelMapper;
     UserSubscriptionRepository userSubscriptionRepository;
     BookItemRepository bookItemRepository;
     BookRepository bookRepository;
     FineRepository fineRepository;
+    AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -83,12 +92,11 @@ public class RentalServiceImpl implements RentalService {
         // 1. Check user subscription
         UserSubscription activeSub = userSubscriptionRepository
             .findActiveSubscriptionByUserId(dto.getUserId())
-            .orElseThrow(() ->
-                new AppException(
-                    HttpStatus.BAD_REQUEST,
-                    "Không có gói cước hợp lệ hoặc hết hạn. Vui lòng gia hạn thẻ!"
-                )
-            );
+            .orElseThrow(() -> {
+                String msg = "Không có gói cước hợp lệ hoặc hết hạn. Vui lòng gia hạn thẻ!";
+                safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+                return new AppException(HttpStatus.BAD_REQUEST, msg);
+            });
 
         // 2. Check user có fine chưa thanh toán không
         boolean hasUnpaidFine = fineRepository.existsByRental_UserIdAndStatus(
@@ -96,10 +104,9 @@ public class RentalServiceImpl implements RentalService {
             FineStatus.UNPAID
         );
         if (hasUnpaidFine) {
-            throw new AppException(
-                HttpStatus.BAD_REQUEST,
-                "Tài khoản đang nợ phí phạt. Không thể mượn thêm sách cho đến khi thanh toán!"
-            );
+            String msg = "Tài khoản đang nợ phí phạt. Không thể mượn thêm sách cho đến khi thanh toán!";
+            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+            throw new AppException(HttpStatus.BAD_REQUEST, msg);
         }
 
         // 3. Check số lượng sách hiện tại user đang mượn
@@ -110,27 +117,23 @@ public class RentalServiceImpl implements RentalService {
             .filter(r -> r.getStatus() == RentalStatus.BORROWING)
             .count();
         if (currentBorrowingCount >= maxBooksAllowed) {
-            throw new AppException(
-                HttpStatus.BAD_REQUEST,
-                "Bạn đã mượn tối đa " +
-                    maxBooksAllowed +
-                    " sách. Vui lòng trả sách để mượn thêm!"
-            );
+            String msg = "Bạn đã mượn tối đa " + maxBooksAllowed + " sách. Vui lòng trả sách để mượn thêm!";
+            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+            throw new AppException(HttpStatus.BAD_REQUEST, msg);
         }
 
         // 4. Check BookItem status
         BookItem bookItem = bookItemRepository
             .findById(dto.getBookItemId())
-            .orElseThrow(() ->
-                new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!")
-            );
+            .orElseThrow(() -> {
+                String msg = "Không tìm thấy bản sách (BookItem)!";
+                safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+                return new AppException(HttpStatus.NOT_FOUND, msg);
+            });
         if (bookItem.getStatus() != BookItemStatus.AVAILABLE) {
-            throw new AppException(
-                HttpStatus.BAD_REQUEST,
-                "Bản sách này không có sẵn (Trạng thái: " +
-                    bookItem.getStatus() +
-                    ")"
-            );
+            String msg = "Bản sách này không có sẵn (Trạng thái: " + bookItem.getStatus() + ")";
+            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+            throw new AppException(HttpStatus.BAD_REQUEST, msg);
         }
 
         // 5. Update BookItem status to BORROWED
@@ -144,7 +147,9 @@ public class RentalServiceImpl implements RentalService {
         int updatedRows = bookRepository.decreaseCount(book.getId());
 
         if (updatedRows == 0) {
-            throw new AppException(HttpStatus.BAD_REQUEST, "Không đủ sách có sẵn trong kho!");
+            String msg = "Không đủ sách có sẵn trong kho!";
+            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+            throw new AppException(HttpStatus.BAD_REQUEST, msg);
         }
 
         // 7. Create rental record
@@ -153,6 +158,14 @@ public class RentalServiceImpl implements RentalService {
         rental.setStatus(RentalStatus.BORROWING);
         rental.setRentDate(LocalDate.now());
         Rental saved = rentalRepository.save(rental);
+
+        safeAuditLog(
+                dto.getUserId(), null,
+                AuditLogAction.BORROW_CREATED,
+                saved.getId().toString(),
+                AuditLogStatus.SUCCESS,
+                "Tạo phiếu mượn thành công - BookItem: " + dto.getBookItemId()
+        );
 
         return modelMapper.map(saved, RentalDTO.class);
     }
@@ -345,5 +358,13 @@ public class RentalServiceImpl implements RentalService {
             .findById(id)
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
         rentalRepository.delete(rental);
+    }
+
+    private void safeAuditLog(UUID userId, String username, AuditLogAction action, String entityId, AuditLogStatus status, String message) {
+        try {
+            auditLogService.log(userId, username, action, AuditLogEntity.RENTAL, entityId, status, message);
+        } catch (Exception ex) {
+            log.warn("Failed to write audit log: action={}, entityId={}", action, entityId, ex);
+        }
     }
 }

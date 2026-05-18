@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,8 +17,10 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 
   List<UserSubscription> findByUser_Id(UUID userId);
 
+  @EntityGraph(attributePaths = {"user", "subscription"})
   List<UserSubscription> findByStatusNot(UserSubscriptionStatus status);
 
+  @EntityGraph(attributePaths = {"user", "subscription"})
   List<UserSubscription> findByUser_IdAndStatusNot(UUID userId, UserSubscriptionStatus status);
 
   List<UserSubscription> findBySubscription_Id(UUID subscriptionId);
@@ -29,6 +32,7 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
   List<UserSubscription> findByUser_IdAndStatusAndEndDateBefore(
       UUID userId, UserSubscriptionStatus status, LocalDate date);
 
+  @EntityGraph(attributePaths = {"user", "subscription"})
   Optional<UserSubscription> findTopByUser_IdAndStatusAndEndDateGreaterThanEqualOrderByEndDateDesc(
       UUID userId, UserSubscriptionStatus status, LocalDate date);
 

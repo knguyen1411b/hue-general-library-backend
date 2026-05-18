@@ -5,8 +5,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.app.backend.common.exception.AppException;
+import org.app.backend.modules.audit.AuditLogService;
+import org.app.backend.modules.audit.enums.AuditLogAction;
+import org.app.backend.modules.audit.enums.AuditLogEntity;
+import org.app.backend.modules.audit.enums.AuditLogStatus;
 import org.app.backend.modules.librarycardrequest.dto.LibraryCardRequestDTO;
 import org.app.backend.modules.user.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -17,12 +23,24 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LibraryCardRequestServiceImpl implements LibraryCardRequestService {
+    private static final Logger log = LoggerFactory.getLogger(LibraryCardRequestServiceImpl.class);
+
     LibraryCardRequestRepository requestRepository;
+    AuditLogService auditLogService;
 
     @Override
     @Transactional
     public LibraryCardRequest createRequest(LibraryCardRequest request) {
-        return requestRepository.save(request);
+        LibraryCardRequest saved = requestRepository.save(request);
+        safeAuditLog(
+                saved.getUser().getId(),
+                saved.getUser().getUsername(),
+                AuditLogAction.LIBRARY_CARD_REQUEST_CREATED,
+                saved.getId().toString(),
+                AuditLogStatus.SUCCESS,
+                "Độc giả gửi yêu cầu cấp thẻ vật lý"
+        );
+        return saved;
     }
 
     @Override
@@ -82,11 +100,34 @@ public class LibraryCardRequestServiceImpl implements LibraryCardRequestService 
                     "Yêu cầu này đã được xử lý (trạng thái: " + request.getStatus() + "), không thể cập nhật lại");
         }
 
+        String oldNote = request.getNote();
         if (note != null && !note.isBlank()) {
             request.setNote(note);
         }
         request.setStatus(status);
         LibraryCardRequest saved = requestRepository.save(request);
+
+        AuditLogAction action = status == LibraryCardRequestStatus.APPROVED
+                ? AuditLogAction.LIBRARY_CARD_REQUEST_APPROVED
+                : AuditLogAction.LIBRARY_CARD_REQUEST_REJECTED;
+
+        String auditMsg = status == LibraryCardRequestStatus.APPROVED
+                ? "Thủ thư duyệt yêu cầu cấp thẻ"
+                : "Thủ thư từ chối yêu cầu cấp thẻ";
+
+        if (note != null && !note.isBlank()) {
+            auditMsg += " - Ghi chú: " + note;
+        }
+
+        safeAuditLog(
+                saved.getUser().getId(),
+                saved.getUser().getUsername(),
+                action,
+                saved.getId().toString(),
+                AuditLogStatus.SUCCESS,
+                auditMsg
+        );
+
         return toDTO(saved);
     }
 
@@ -109,7 +150,25 @@ public class LibraryCardRequestServiceImpl implements LibraryCardRequestService 
 
         request.setStatus(LibraryCardRequestStatus.REJECTED);
         LibraryCardRequest saved = requestRepository.save(request);
+
+        safeAuditLog(
+                userId,
+                saved.getUser().getUsername(),
+                AuditLogAction.LIBRARY_CARD_REQUEST_CANCELED,
+                saved.getId().toString(),
+                AuditLogStatus.SUCCESS,
+                "Độc giả hủy yêu cầu cấp thẻ"
+        );
+
         return toDTO(saved);
+    }
+
+    private void safeAuditLog(UUID userId, String username, AuditLogAction action, String entityId, AuditLogStatus status, String message) {
+        try {
+            auditLogService.log(userId, username, action, AuditLogEntity.LIBRARY_CARD_REQUEST, entityId, status, message);
+        } catch (Exception ex) {
+            log.warn("Failed to write audit log: action={}, entityId={}", action, entityId, ex);
+        }
     }
 
     private LibraryCardRequestDTO toDTO(LibraryCardRequest request) {
