@@ -6,6 +6,7 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.app.backend.common.exception.AppException;
 import org.app.backend.modules.auth.security.CustomUserDetails;
 import org.app.backend.modules.book.Book;
 import org.app.backend.modules.book.BookRepository;
@@ -23,6 +24,7 @@ import org.app.backend.modules.usersubscription.UserSubscriptionRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,7 +73,7 @@ public class RentalServiceImpl implements RentalService {
     public RentalDTO findById(UUID id) {
         Rental rental = rentalRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Rental not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
         return modelMapper.map(rental, RentalDTO.class);
     }
 
@@ -82,7 +84,8 @@ public class RentalServiceImpl implements RentalService {
         UserSubscription activeSub = userSubscriptionRepository
             .findActiveSubscriptionByUserId(dto.getUserId())
             .orElseThrow(() ->
-                new RuntimeException(
+                new AppException(
+                    HttpStatus.BAD_REQUEST,
                     "Không có gói cước hợp lệ hoặc hết hạn. Vui lòng gia hạn thẻ!"
                 )
             );
@@ -93,7 +96,8 @@ public class RentalServiceImpl implements RentalService {
             FineStatus.UNPAID
         );
         if (hasUnpaidFine) {
-            throw new RuntimeException(
+            throw new AppException(
+                HttpStatus.BAD_REQUEST,
                 "Tài khoản đang nợ phí phạt. Không thể mượn thêm sách cho đến khi thanh toán!"
             );
         }
@@ -106,7 +110,8 @@ public class RentalServiceImpl implements RentalService {
             .filter(r -> r.getStatus() == RentalStatus.BORROWING)
             .count();
         if (currentBorrowingCount >= maxBooksAllowed) {
-            throw new RuntimeException(
+            throw new AppException(
+                HttpStatus.BAD_REQUEST,
                 "Bạn đã mượn tối đa " +
                     maxBooksAllowed +
                     " sách. Vui lòng trả sách để mượn thêm!"
@@ -117,10 +122,11 @@ public class RentalServiceImpl implements RentalService {
         BookItem bookItem = bookItemRepository
             .findById(dto.getBookItemId())
             .orElseThrow(() ->
-                new RuntimeException("Không tìm thấy bản sách (BookItem)!")
+                new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!")
             );
         if (bookItem.getStatus() != BookItemStatus.AVAILABLE) {
-            throw new RuntimeException(
+            throw new AppException(
+                HttpStatus.BAD_REQUEST,
                 "Bản sách này không có sẵn (Trạng thái: " +
                     bookItem.getStatus() +
                     ")"
@@ -138,7 +144,7 @@ public class RentalServiceImpl implements RentalService {
         int updatedRows = bookRepository.decreaseCount(book.getId());
 
         if (updatedRows == 0) {
-            throw new RuntimeException("Không đủ sách có sẵn trong kho!");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Không đủ sách có sẵn trong kho!");
         }
 
         // 7. Create rental record
@@ -156,7 +162,7 @@ public class RentalServiceImpl implements RentalService {
     public RentalDTO returnBook(UUID id, CustomUserDetails actor) {
         Rental rental = rentalRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Rental not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
 
         LocalDate today = LocalDate.now();
         rental.setReturnDate(today);
@@ -165,7 +171,7 @@ public class RentalServiceImpl implements RentalService {
         BookItem bookItem = bookItemRepository
             .findById(rental.getBookItemId())
             .orElseThrow(() ->
-                new RuntimeException("BookItem không tìm thấy!")
+                new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!")
             );
 
         // 2. Restore Book available count
@@ -211,7 +217,7 @@ public class RentalServiceImpl implements RentalService {
                     Fine existingFine = fineRepository
                         .findByRental_Id(rental.getId())
                         .orElseThrow(() ->
-                            new RuntimeException("Fine not found")
+                            new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy khoản phạt")
                         );
                     existingFine.setAmount(totalFine);
                     existingFine.setReason(reason);
@@ -237,7 +243,7 @@ public class RentalServiceImpl implements RentalService {
     public RentalDTO renewBook(UUID id, CustomUserDetails actor) {
         Rental rental = rentalRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Rental not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
 
         // 1. Check user không có fine chưa thanh toán
         boolean hasUnpaidFine = fineRepository.existsByRental_UserIdAndStatus(
@@ -245,14 +251,16 @@ public class RentalServiceImpl implements RentalService {
             FineStatus.UNPAID
         );
         if (hasUnpaidFine) {
-            throw new RuntimeException(
+            throw new AppException(
+                HttpStatus.BAD_REQUEST,
                 "Tài khoản đang nợ phí phạt. Không thể gia hạn sách cho đến khi thanh toán!"
             );
         }
 
         // 2. Check sách chưa quá hạn
         if (LocalDate.now().isAfter(rental.getDueDate())) {
-            throw new RuntimeException(
+            throw new AppException(
+                HttpStatus.BAD_REQUEST,
                 "Sách đã quá hạn. Vui lòng trả sách và thanh toán phạt trước khi gia hạn!"
             );
         }
@@ -261,7 +269,8 @@ public class RentalServiceImpl implements RentalService {
         UserSubscription activeSub = userSubscriptionRepository
             .findActiveSubscriptionByUserId(rental.getUserId())
             .orElseThrow(() ->
-                new RuntimeException(
+                new AppException(
+                    HttpStatus.BAD_REQUEST,
                     "Không tìm thấy gói cước hợp lệ cho người dùng!"
                 )
             );
@@ -279,13 +288,13 @@ public class RentalServiceImpl implements RentalService {
     public RentalDTO reportLost(UUID id, CustomUserDetails actor) {
         Rental rental = rentalRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Rental not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
 
         // 1. Get BookItem and change status to DISCARDED
         BookItem bookItem = bookItemRepository
             .findById(rental.getBookItemId())
             .orElseThrow(() ->
-                new RuntimeException("BookItem không tìm thấy!")
+                new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!")
             );
         bookItem.setStatus(BookItemStatus.DISCARDED);
         bookItemRepository.save(bookItem);
@@ -334,7 +343,7 @@ public class RentalServiceImpl implements RentalService {
     public void delete(UUID id, CustomUserDetails actor) {
         Rental rental = rentalRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Rental not found"));
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
         rentalRepository.delete(rental);
     }
 }
