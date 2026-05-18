@@ -7,6 +7,7 @@ import org.app.backend.modules.subscription.dto.SubscriptionDTO;
 import org.app.backend.modules.subscription.dto.SubscriptionUpdateDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.validation.Valid;
 
 public interface SubscriptionService {
   Page<SubscriptionDTO> findAll(Pageable pageable);
@@ -17,7 +18,7 @@ public interface SubscriptionService {
 
   SubscriptionDTO findByKey(String key);
 
-  void update(UUID id, SubscriptionUpdateDTO dto, CustomUserDetails actor);
+  void update(UUID id, @Valid SubscriptionUpdateDTO dto, CustomUserDetails actor);
 
   void delete(UUID id, CustomUserDetails actor);
 }
