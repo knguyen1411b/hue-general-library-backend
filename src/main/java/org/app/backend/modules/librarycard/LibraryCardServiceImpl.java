@@ -50,7 +50,8 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
+            .orElseThrow(
+                () -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     return modelMapper.map(card, LibraryCardDTO.class);
   }
 
@@ -72,7 +73,8 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
+            .orElseThrow(
+                () -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     if (dto.getIssueDate() != null) card.setIssueDate(dto.getIssueDate());
     if (dto.getExpiryDate() != null) card.setExpiryDate(dto.getExpiryDate());
     if (dto.getStatus() != null) card.setStatus(dto.getStatus());
@@ -86,7 +88,8 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
+            .orElseThrow(
+                () -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     libraryCardRepository.delete(card);
   }
 
@@ -96,7 +99,8 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard card =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
+            .orElseThrow(
+                () -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     card.setStatus(CardStatus.BLOCKED);
     LibraryCard saved = libraryCardRepository.save(card);
     return modelMapper.map(saved, LibraryCardDTO.class);
@@ -113,8 +117,8 @@ public class LibraryCardServiceImpl implements LibraryCardService {
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
 
     if (requestRepository.existsByUserIdAndStatus(
-            user.getId(),
-            org.app.backend.modules.librarycardrequest.LibraryCardRequestStatus.PENDING)) {
+        user.getId(),
+        org.app.backend.modules.librarycardrequest.LibraryCardRequestStatus.PENDING)) {
       throw new AppException(
           HttpStatus.BAD_REQUEST,
           "Bạn đã có yêu cầu cấp thẻ đang chờ xử lý. Vui lòng chờ thủ thư phê duyệt.");
@@ -136,7 +140,8 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     LibraryCard oldCard =
         libraryCardRepository
             .findById(id)
-            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
+            .orElseThrow(
+                () -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy thẻ thư viện"));
     LibraryCard newCard = new LibraryCard();
     newCard.setUserId(oldCard.getUserId());
     newCard.setIssueDate(java.time.LocalDate.now());

@@ -39,332 +39,337 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RentalServiceImpl implements RentalService {
 
-    private static final Logger log = LoggerFactory.getLogger(RentalServiceImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(RentalServiceImpl.class);
 
-    RentalRepository rentalRepository;
-    ModelMapper modelMapper;
-    UserSubscriptionRepository userSubscriptionRepository;
-    BookItemRepository bookItemRepository;
-    BookRepository bookRepository;
-    FineRepository fineRepository;
-    AuditLogService auditLogService;
+  RentalRepository rentalRepository;
+  ModelMapper modelMapper;
+  UserSubscriptionRepository userSubscriptionRepository;
+  BookItemRepository bookItemRepository;
+  BookRepository bookRepository;
+  FineRepository fineRepository;
+  AuditLogService auditLogService;
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<RentalDTO> findAll(
-        Pageable pageable,
-        UUID userId,
-        RentalStatus status,
-        UUID bookItemId
-    ) {
-        if (userId != null) {
-            return rentalRepository
-                .findByUserId(userId, pageable)
-                .map(r -> modelMapper.map(r, RentalDTO.class));
-        }
-        if (status != null) {
-            return rentalRepository
-                .findByStatus(status, pageable)
-                .map(r -> modelMapper.map(r, RentalDTO.class));
-        }
-        if (bookItemId != null) {
-            return rentalRepository
-                .findByBookItemId(bookItemId, pageable)
-                .map(r -> modelMapper.map(r, RentalDTO.class));
-        }
-        return rentalRepository
-            .findAll(pageable)
-            .map(r -> modelMapper.map(r, RentalDTO.class));
+  @Override
+  @Transactional(readOnly = true)
+  public Page<RentalDTO> findAll(
+      Pageable pageable, UUID userId, RentalStatus status, UUID bookItemId) {
+    if (userId != null) {
+      return rentalRepository
+          .findByUserId(userId, pageable)
+          .map(r -> modelMapper.map(r, RentalDTO.class));
     }
+    if (status != null) {
+      return rentalRepository
+          .findByStatus(status, pageable)
+          .map(r -> modelMapper.map(r, RentalDTO.class));
+    }
+    if (bookItemId != null) {
+      return rentalRepository
+          .findByBookItemId(bookItemId, pageable)
+          .map(r -> modelMapper.map(r, RentalDTO.class));
+    }
+    return rentalRepository.findAll(pageable).map(r -> modelMapper.map(r, RentalDTO.class));
+  }
 
-    @Override
-    @Transactional(readOnly = true)
-    public RentalDTO findById(UUID id) {
-        Rental rental = rentalRepository
+  @Override
+  @Transactional(readOnly = true)
+  public RentalDTO findById(UUID id) {
+    Rental rental =
+        rentalRepository
             .findById(id)
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
-        return modelMapper.map(rental, RentalDTO.class);
+    return modelMapper.map(rental, RentalDTO.class);
+  }
+
+  @Override
+  @Transactional
+  public RentalDTO create(RentalCreateDTO dto, CustomUserDetails actor) {
+    // 1. Check user subscription
+    UserSubscription activeSub =
+        userSubscriptionRepository
+            .findActiveSubscriptionByUserId(dto.getUserId())
+            .orElseThrow(
+                () -> {
+                  String msg = "Không có gói cước hợp lệ hoặc hết hạn. Vui lòng gia hạn thẻ!";
+                  safeAuditLog(
+                      dto.getUserId(),
+                      null,
+                      AuditLogAction.BORROW_CREATED,
+                      null,
+                      AuditLogStatus.FAILED,
+                      msg);
+                  return new AppException(HttpStatus.BAD_REQUEST, msg);
+                });
+
+    // 2. Check user có fine chưa thanh toán không
+    boolean hasUnpaidFine =
+        fineRepository.existsByRental_UserIdAndStatus(dto.getUserId(), FineStatus.UNPAID);
+    if (hasUnpaidFine) {
+      String msg = "Tài khoản đang nợ phí phạt. Không thể mượn thêm sách cho đến khi thanh toán!";
+      safeAuditLog(
+          dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+      throw new AppException(HttpStatus.BAD_REQUEST, msg);
     }
 
-    @Override
-    @Transactional
-    public RentalDTO create(RentalCreateDTO dto, CustomUserDetails actor) {
-        // 1. Check user subscription
-        UserSubscription activeSub = userSubscriptionRepository
-            .findActiveSubscriptionByUserId(dto.getUserId())
-            .orElseThrow(() -> {
-                String msg = "Không có gói cước hợp lệ hoặc hết hạn. Vui lòng gia hạn thẻ!";
-                safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
-                return new AppException(HttpStatus.BAD_REQUEST, msg);
-            });
-
-        // 2. Check user có fine chưa thanh toán không
-        boolean hasUnpaidFine = fineRepository.existsByRental_UserIdAndStatus(
-            dto.getUserId(),
-            FineStatus.UNPAID
-        );
-        if (hasUnpaidFine) {
-            String msg = "Tài khoản đang nợ phí phạt. Không thể mượn thêm sách cho đến khi thanh toán!";
-            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
-            throw new AppException(HttpStatus.BAD_REQUEST, msg);
-        }
-
-        // 3. Check số lượng sách hiện tại user đang mượn
-        int maxBooksAllowed = activeSub.getSubscription().getMaxBooks();
-        long currentBorrowingCount = rentalRepository
-            .findByUserId(dto.getUserId())
-            .stream()
+    // 3. Check số lượng sách hiện tại user đang mượn
+    int maxBooksAllowed = activeSub.getSubscription().getMaxBooks();
+    long currentBorrowingCount =
+        rentalRepository.findByUserId(dto.getUserId()).stream()
             .filter(r -> r.getStatus() == RentalStatus.BORROWING)
             .count();
-        if (currentBorrowingCount >= maxBooksAllowed) {
-            String msg = "Bạn đã mượn tối đa " + maxBooksAllowed + " sách. Vui lòng trả sách để mượn thêm!";
-            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
-            throw new AppException(HttpStatus.BAD_REQUEST, msg);
-        }
+    if (currentBorrowingCount >= maxBooksAllowed) {
+      String msg =
+          "Bạn đã mượn tối đa " + maxBooksAllowed + " sách. Vui lòng trả sách để mượn thêm!";
+      safeAuditLog(
+          dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+      throw new AppException(HttpStatus.BAD_REQUEST, msg);
+    }
 
-        // 4. Check BookItem status
-        BookItem bookItem = bookItemRepository
+    // 4. Check BookItem status
+    BookItem bookItem =
+        bookItemRepository
             .findById(dto.getBookItemId())
-            .orElseThrow(() -> {
-                String msg = "Không tìm thấy bản sách (BookItem)!";
-                safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
-                return new AppException(HttpStatus.NOT_FOUND, msg);
-            });
-        if (bookItem.getStatus() != BookItemStatus.AVAILABLE) {
-            String msg = "Bản sách này không có sẵn (Trạng thái: " + bookItem.getStatus() + ")";
-            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
-            throw new AppException(HttpStatus.BAD_REQUEST, msg);
-        }
-
-        // 5. Update BookItem status to BORROWED
-        bookItem.setStatus(BookItemStatus.BORROWED);
-        bookItemRepository.save(bookItem);
-
-        // 6. Decrease Book available count
-        Book book = bookItem.getBook();
-
-        // Giảm số lượng atomic
-        int updatedRows = bookRepository.decreaseCount(book.getId());
-
-        if (updatedRows == 0) {
-            String msg = "Không đủ sách có sẵn trong kho!";
-            safeAuditLog(dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
-            throw new AppException(HttpStatus.BAD_REQUEST, msg);
-        }
-
-        // 7. Create rental record
-        Rental rental = modelMapper.map(dto, Rental.class);
-        rental.setId(null);
-        rental.setStatus(RentalStatus.BORROWING);
-        rental.setRentDate(LocalDate.now());
-        Rental saved = rentalRepository.save(rental);
-
-        safeAuditLog(
-                dto.getUserId(), null,
-                AuditLogAction.BORROW_CREATED,
-                saved.getId().toString(),
-                AuditLogStatus.SUCCESS,
-                "Tạo phiếu mượn thành công - BookItem: " + dto.getBookItemId()
-        );
-
-        return modelMapper.map(saved, RentalDTO.class);
+            .orElseThrow(
+                () -> {
+                  String msg = "Không tìm thấy bản sách (BookItem)!";
+                  safeAuditLog(
+                      dto.getUserId(),
+                      null,
+                      AuditLogAction.BORROW_CREATED,
+                      null,
+                      AuditLogStatus.FAILED,
+                      msg);
+                  return new AppException(HttpStatus.NOT_FOUND, msg);
+                });
+    if (bookItem.getStatus() != BookItemStatus.AVAILABLE) {
+      String msg = "Bản sách này không có sẵn (Trạng thái: " + bookItem.getStatus() + ")";
+      safeAuditLog(
+          dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+      throw new AppException(HttpStatus.BAD_REQUEST, msg);
     }
 
-    @Override
-    @Transactional
-    public RentalDTO returnBook(UUID id, CustomUserDetails actor) {
-        Rental rental = rentalRepository
+    // 5. Update BookItem status to BORROWED
+    bookItem.setStatus(BookItemStatus.BORROWED);
+    bookItemRepository.save(bookItem);
+
+    // 6. Decrease Book available count
+    Book book = bookItem.getBook();
+
+    // Giảm số lượng atomic
+    int updatedRows = bookRepository.decreaseCount(book.getId());
+
+    if (updatedRows == 0) {
+      String msg = "Không đủ sách có sẵn trong kho!";
+      safeAuditLog(
+          dto.getUserId(), null, AuditLogAction.BORROW_CREATED, null, AuditLogStatus.FAILED, msg);
+      throw new AppException(HttpStatus.BAD_REQUEST, msg);
+    }
+
+    // 7. Create rental record
+    Rental rental = modelMapper.map(dto, Rental.class);
+    rental.setId(null);
+    rental.setStatus(RentalStatus.BORROWING);
+    rental.setRentDate(LocalDate.now());
+    Rental saved = rentalRepository.save(rental);
+
+    safeAuditLog(
+        dto.getUserId(),
+        null,
+        AuditLogAction.BORROW_CREATED,
+        saved.getId().toString(),
+        AuditLogStatus.SUCCESS,
+        "Tạo phiếu mượn thành công - BookItem: " + dto.getBookItemId());
+
+    return modelMapper.map(saved, RentalDTO.class);
+  }
+
+  @Override
+  @Transactional
+  public RentalDTO returnBook(UUID id, CustomUserDetails actor) {
+    Rental rental =
+        rentalRepository
             .findById(id)
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
 
-        LocalDate today = LocalDate.now();
-        rental.setReturnDate(today);
+    LocalDate today = LocalDate.now();
+    rental.setReturnDate(today);
 
-        // 1. Get BookItem and restore status
-        BookItem bookItem = bookItemRepository
+    // 1. Get BookItem and restore status
+    BookItem bookItem =
+        bookItemRepository
             .findById(rental.getBookItemId())
-            .orElseThrow(() ->
-                new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!")
-            );
+            .orElseThrow(
+                () ->
+                    new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!"));
 
-        // 2. Restore Book available count
-        Book book = bookItem.getBook();
-        bookRepository.increaseCount(book.getId());
-        bookRepository.save(book);
+    // 2. Restore Book available count
+    Book book = bookItem.getBook();
+    bookRepository.increaseCount(book.getId());
+    bookRepository.save(book);
 
-        // 3. Check overdue and create fine if needed
-        if (today.isAfter(rental.getDueDate())) {
-            long overdueDays = ChronoUnit.DAYS.between(
-                rental.getDueDate(),
-                today
-            );
-            UserSubscription activeSub = userSubscriptionRepository
-                .findActiveSubscriptionByUserId(rental.getUserId())
-                .orElse(null);
+    // 3. Check overdue and create fine if needed
+    if (today.isAfter(rental.getDueDate())) {
+      long overdueDays = ChronoUnit.DAYS.between(rental.getDueDate(), today);
+      UserSubscription activeSub =
+          userSubscriptionRepository
+              .findActiveSubscriptionByUserId(rental.getUserId())
+              .orElse(null);
 
-            if (activeSub != null) {
-                int overdueFeePerDay = activeSub
-                    .getSubscription()
-                    .getOverdueFeePerDay();
-                int totalFine = (int) (overdueDays * overdueFeePerDay);
-                String reason =
-                    "Phạt trễ hạn " +
-                    overdueDays +
-                    " ngày tại " +
-                    overdueFeePerDay +
-                    "đ/ngày";
+      if (activeSub != null) {
+        int overdueFeePerDay = activeSub.getSubscription().getOverdueFeePerDay();
+        int totalFine = (int) (overdueDays * overdueFeePerDay);
+        String reason = "Phạt trễ hạn " + overdueDays + " ngày tại " + overdueFeePerDay + "đ/ngày";
 
-                // FIX: Check fine đã tồn tại chưa trước khi tạo mới
-                boolean fineExists = fineRepository.existsByRental_Id(
-                    rental.getId()
-                );
-                if (!fineExists) {
-                    Fine fine = Fine.builder()
-                        .rental(rental)
-                        .amount(totalFine)
-                        .reason(reason)
-                        .status(FineStatus.UNPAID)
-                        .build();
-                    fineRepository.save(fine);
-                } else {
-                    Fine existingFine = fineRepository
-                        .findByRental_Id(rental.getId())
-                        .orElseThrow(() ->
-                            new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy khoản phạt")
-                        );
-                    existingFine.setAmount(totalFine);
-                    existingFine.setReason(reason);
-                    fineRepository.save(existingFine);
-                }
-
-                rental.setStatus(RentalStatus.OVERDUE);
-            }
-            bookItem.setStatus(BookItemStatus.AVAILABLE);
-            bookItemRepository.save(bookItem);
+        // FIX: Check fine đã tồn tại chưa trước khi tạo mới
+        boolean fineExists = fineRepository.existsByRental_Id(rental.getId());
+        if (!fineExists) {
+          Fine fine =
+              Fine.builder()
+                  .rental(rental)
+                  .amount(totalFine)
+                  .reason(reason)
+                  .status(FineStatus.UNPAID)
+                  .build();
+          fineRepository.save(fine);
         } else {
-            bookItem.setStatus(BookItemStatus.AVAILABLE);
-            bookItemRepository.save(bookItem);
-            rental.setStatus(RentalStatus.RETURNED);
+          Fine existingFine =
+              fineRepository
+                  .findByRental_Id(rental.getId())
+                  .orElseThrow(
+                      () -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy khoản phạt"));
+          existingFine.setAmount(totalFine);
+          existingFine.setReason(reason);
+          fineRepository.save(existingFine);
         }
 
-        Rental saved = rentalRepository.save(rental);
-        return modelMapper.map(saved, RentalDTO.class);
+        rental.setStatus(RentalStatus.OVERDUE);
+      }
+      bookItem.setStatus(BookItemStatus.AVAILABLE);
+      bookItemRepository.save(bookItem);
+    } else {
+      bookItem.setStatus(BookItemStatus.AVAILABLE);
+      bookItemRepository.save(bookItem);
+      rental.setStatus(RentalStatus.RETURNED);
     }
 
-    @Override
-    @Transactional
-    public RentalDTO renewBook(UUID id, CustomUserDetails actor) {
-        Rental rental = rentalRepository
+    Rental saved = rentalRepository.save(rental);
+    return modelMapper.map(saved, RentalDTO.class);
+  }
+
+  @Override
+  @Transactional
+  public RentalDTO renewBook(UUID id, CustomUserDetails actor) {
+    Rental rental =
+        rentalRepository
             .findById(id)
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
 
-        // 1. Check user không có fine chưa thanh toán
-        boolean hasUnpaidFine = fineRepository.existsByRental_UserIdAndStatus(
-            rental.getUserId(),
-            FineStatus.UNPAID
-        );
-        if (hasUnpaidFine) {
-            throw new AppException(
-                HttpStatus.BAD_REQUEST,
-                "Tài khoản đang nợ phí phạt. Không thể gia hạn sách cho đến khi thanh toán!"
-            );
-        }
+    // 1. Check user không có fine chưa thanh toán
+    boolean hasUnpaidFine =
+        fineRepository.existsByRental_UserIdAndStatus(rental.getUserId(), FineStatus.UNPAID);
+    if (hasUnpaidFine) {
+      throw new AppException(
+          HttpStatus.BAD_REQUEST,
+          "Tài khoản đang nợ phí phạt. Không thể gia hạn sách cho đến khi thanh toán!");
+    }
 
-        // 2. Check sách chưa quá hạn
-        if (LocalDate.now().isAfter(rental.getDueDate())) {
-            throw new AppException(
-                HttpStatus.BAD_REQUEST,
-                "Sách đã quá hạn. Vui lòng trả sách và thanh toán phạt trước khi gia hạn!"
-            );
-        }
+    // 2. Check sách chưa quá hạn
+    if (LocalDate.now().isAfter(rental.getDueDate())) {
+      throw new AppException(
+          HttpStatus.BAD_REQUEST,
+          "Sách đã quá hạn. Vui lòng trả sách và thanh toán phạt trước khi gia hạn!");
+    }
 
-        // 3. Get subscription to extend due date
-        UserSubscription activeSub = userSubscriptionRepository
+    // 3. Get subscription to extend due date
+    UserSubscription activeSub =
+        userSubscriptionRepository
             .findActiveSubscriptionByUserId(rental.getUserId())
-            .orElseThrow(() ->
-                new AppException(
-                    HttpStatus.BAD_REQUEST,
-                    "Không tìm thấy gói cước hợp lệ cho người dùng!"
-                )
-            );
+            .orElseThrow(
+                () ->
+                    new AppException(
+                        HttpStatus.BAD_REQUEST, "Không tìm thấy gói cước hợp lệ cho người dùng!"));
 
-        // 4. Extend due date by subscription duration
-        int durationDays = activeSub.getSubscription().getDurationDays();
-        rental.setDueDate(rental.getDueDate().plusDays(durationDays));
+    // 4. Extend due date by subscription duration
+    int durationDays = activeSub.getSubscription().getDurationDays();
+    rental.setDueDate(rental.getDueDate().plusDays(durationDays));
 
-        Rental saved = rentalRepository.save(rental);
-        return modelMapper.map(saved, RentalDTO.class);
-    }
+    Rental saved = rentalRepository.save(rental);
+    return modelMapper.map(saved, RentalDTO.class);
+  }
 
-    @Override
-    @Transactional
-    public RentalDTO reportLost(UUID id, CustomUserDetails actor) {
-        Rental rental = rentalRepository
+  @Override
+  @Transactional
+  public RentalDTO reportLost(UUID id, CustomUserDetails actor) {
+    Rental rental =
+        rentalRepository
             .findById(id)
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
 
-        // 1. Get BookItem and change status to DISCARDED
-        BookItem bookItem = bookItemRepository
+    // 1. Get BookItem and change status to DISCARDED
+    BookItem bookItem =
+        bookItemRepository
             .findById(rental.getBookItemId())
-            .orElseThrow(() ->
-                new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!")
-            );
-        bookItem.setStatus(BookItemStatus.DISCARDED);
-        bookItemRepository.save(bookItem);
+            .orElseThrow(
+                () ->
+                    new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bản sách (BookItem)!"));
+    bookItem.setStatus(BookItemStatus.DISCARDED);
+    bookItemRepository.save(bookItem);
 
-        // 2. Get subscription for compensation fee
-        UserSubscription activeSub = userSubscriptionRepository
-            .findActiveSubscriptionByUserId(rental.getUserId())
-            .orElse(null);
+    // 2. Get subscription for compensation fee
+    UserSubscription activeSub =
+        userSubscriptionRepository.findActiveSubscriptionByUserId(rental.getUserId()).orElse(null);
 
-        // 3. Create fine for lost book compensation
-        if (activeSub != null && bookItem.getBook() != null) {
-            // FIX: Check fine đã tồn tại chưa trước khi tạo mới
-            boolean fineExists = fineRepository.existsByRental_Id(
-                rental.getId()
-            );
-            if (!fineExists) {
-                int compensationRate = activeSub
-                    .getSubscription()
-                    .getCompensationRate();
-                int compensationAmount = (int) ((bookItem.getBook().getPrice() *
-                        compensationRate) / 100.0);
+    // 3. Create fine for lost book compensation
+    if (activeSub != null && bookItem.getBook() != null) {
+      // FIX: Check fine đã tồn tại chưa trước khi tạo mới
+      boolean fineExists = fineRepository.existsByRental_Id(rental.getId());
+      if (!fineExists) {
+        int compensationRate = activeSub.getSubscription().getCompensationRate();
+        int compensationAmount = (int) ((bookItem.getBook().getPrice() * compensationRate) / 100.0);
 
-                Fine fine = Fine.builder()
-                    .rental(rental)
-                    .amount(compensationAmount)
-                    .reason(
-                        "Bồi thường sách mất: " +
-                            bookItem.getBook().getTitle() +
-                            " - " +
-                            compensationRate +
-                            "%"
-                    )
-                    .status(FineStatus.UNPAID)
-                    .build();
-                fineRepository.save(fine);
-            }
-        }
-
-        rental.setStatus(RentalStatus.LOST);
-        Rental saved = rentalRepository.save(rental);
-        return modelMapper.map(saved, RentalDTO.class);
+        Fine fine =
+            Fine.builder()
+                .rental(rental)
+                .amount(compensationAmount)
+                .reason(
+                    "Bồi thường sách mất: "
+                        + bookItem.getBook().getTitle()
+                        + " - "
+                        + compensationRate
+                        + "%")
+                .status(FineStatus.UNPAID)
+                .build();
+        fineRepository.save(fine);
+      }
     }
 
-    @Override
-    @Transactional
-    public void delete(UUID id, CustomUserDetails actor) {
-        Rental rental = rentalRepository
+    rental.setStatus(RentalStatus.LOST);
+    Rental saved = rentalRepository.save(rental);
+    return modelMapper.map(saved, RentalDTO.class);
+  }
+
+  @Override
+  @Transactional
+  public void delete(UUID id, CustomUserDetails actor) {
+    Rental rental =
+        rentalRepository
             .findById(id)
             .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy phiếu mượn"));
-        rentalRepository.delete(rental);
-    }
+    rentalRepository.delete(rental);
+  }
 
-    private void safeAuditLog(UUID userId, String username, AuditLogAction action, String entityId, AuditLogStatus status, String message) {
-        try {
-            auditLogService.log(userId, username, action, AuditLogEntity.RENTAL, entityId, status, message);
-        } catch (Exception ex) {
-            log.warn("Failed to write audit log: action={}, entityId={}", action, entityId, ex);
-        }
+  private void safeAuditLog(
+      UUID userId,
+      String username,
+      AuditLogAction action,
+      String entityId,
+      AuditLogStatus status,
+      String message) {
+    try {
+      auditLogService.log(
+          userId, username, action, AuditLogEntity.RENTAL, entityId, status, message);
+    } catch (Exception ex) {
+      log.warn("Failed to write audit log: action={}, entityId={}", action, entityId, ex);
     }
+  }
 }

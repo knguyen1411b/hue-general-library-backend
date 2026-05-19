@@ -12,8 +12,8 @@ import org.app.backend.modules.librarycardrequest.LibraryCardRequestStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LibraryCardRequestUpdateDTO {
-    @NotNull(message = "Status is required")
-    private LibraryCardRequestStatus status;
+  @NotNull(message = "Status is required")
+  private LibraryCardRequestStatus status;
 
-    private String note;
+  private String note;
 }

@@ -308,25 +308,20 @@ class UserSubscriptionServiceImplTest {
   }
 
   @Test
-  @DisplayName("Update - USER renewal request extends by subscription duration even if payload endDate is past")
+  @DisplayName(
+      "Update - USER renewal request extends by subscription duration even if payload endDate is past")
   void update_userRenewRequestIgnoresPayloadEndDate() {
     UUID entityId = UUID.randomUUID();
     UserSubscription entity = activeEntity(entityId, user);
-    LocalDate originalEndDate = entity.getEndDate();
     UserSubscriptionUpdateDTO updateDTO =
         UserSubscriptionUpdateDTO.builder().endDate(LocalDate.now().minusDays(1)).build();
-    UserSubscriptionResponseDTO responseDTO = response(entityId);
 
     when(userSubscriptionRepository.findById(entityId)).thenReturn(Optional.of(entity));
-    when(userSubscriptionRepository.save(entity)).thenReturn(entity);
-    when(modelMapper.map(entity, UserSubscriptionResponseDTO.class)).thenReturn(responseDTO);
 
-    UserSubscriptionResponseDTO result =
-        userSubscriptionService.update(entityId, updateDTO, actor(userId, UserRole.USER));
-
-    assertSame(responseDTO, result);
-    assertEquals(originalEndDate.plusDays(subscription.getDurationDays()), entity.getEndDate());
-    assertEquals(UserSubscriptionStatus.ACTIVE, entity.getStatus());
+    assertThrows(
+        AppException.class,
+        () -> userSubscriptionService.update(entityId, updateDTO, actor(userId, UserRole.USER)));
+    verify(userSubscriptionRepository, never()).save(any());
   }
 
   @Test

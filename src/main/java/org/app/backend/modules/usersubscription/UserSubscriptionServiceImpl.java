@@ -55,7 +55,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     LocalDate today = LocalDate.now();
     markExpiredSubscriptions(managedUser.getId(), today);
 
-    var maybeActiveSubscription = userSubscriptionRepository.findActiveSubscriptionByUserId(managedUser.getId());
+    var maybeActiveSubscription =
+        userSubscriptionRepository.findActiveSubscriptionByUserId(managedUser.getId());
     UserSubscription activeSubscription =
         maybeActiveSubscription != null ? maybeActiveSubscription.orElse(null) : null;
 
@@ -139,15 +140,22 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     }
 
     if (dto.getEndDate() != null) {
-      if (userRenewRequest) {
-        LocalDate renewalBaseDate = existing.getEndDate().isAfter(today) ? existing.getEndDate() : today;
-        LocalDate renewedEndDate =
-            renewalBaseDate.plusDays(existing.getSubscription().getDurationDays());
+      LocalDate currentEndDate = existing.getEndDate();
+      LocalDate newEndDate = dto.getEndDate();
 
-        existing.setEndDate(renewedEndDate);
+      if (userRenewRequest) {
+        LocalDate minAllowedEndDate =
+            currentEndDate != null && currentEndDate.isAfter(today) ? currentEndDate : today;
+
+        if (!newEndDate.isAfter(minAllowedEndDate)) {
+          throw new AppException(
+              HttpStatus.BAD_REQUEST, "Ngày hết hạn mới phải lớn hơn ngày hết hạn hiện tại.");
+        }
+
+        existing.setEndDate(newEndDate);
         existing.setStatus(UserSubscriptionStatus.ACTIVE);
       } else {
-        existing.setEndDate(dto.getEndDate());
+        existing.setEndDate(newEndDate);
       }
     }
 
@@ -194,8 +202,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
   }
 
   private boolean isAdminOrManager(CustomUserDetails actor) {
-    return actor != null
-        && (actor.getRole() == UserRole.ADMIN || actor.getRole() == UserRole.MANAGER);
+    return (actor != null
+        && (actor.getRole() == UserRole.ADMIN || actor.getRole() == UserRole.MANAGER));
   }
 
   private void validateUserUpdatePermission(
@@ -242,7 +250,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
       return;
     }
 
-    expiredActiveSubscriptions.forEach(subscription -> subscription.setStatus(UserSubscriptionStatus.EXPIRED));
+    expiredActiveSubscriptions.forEach(
+        subscription -> subscription.setStatus(UserSubscriptionStatus.EXPIRED));
     userSubscriptionRepository.saveAll(expiredActiveSubscriptions);
   }
 

@@ -11,17 +11,17 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface LibraryCardRequestRepository extends JpaRepository<LibraryCardRequest, UUID> {
 
-    @EntityGraph(attributePaths = {"user"})
-    Page<LibraryCardRequest> findByUserId(UUID userId, Pageable pageable);
+  @EntityGraph(attributePaths = {"user"})
+  Page<LibraryCardRequest> findByUserId(UUID userId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"user"})
-    Page<LibraryCardRequest> findByStatus(LibraryCardRequestStatus status, Pageable pageable);
+  @EntityGraph(attributePaths = {"user"})
+  Page<LibraryCardRequest> findByStatus(LibraryCardRequestStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"user"})
-    Page<LibraryCardRequest> findAll(Pageable pageable);
+  @EntityGraph(attributePaths = {"user"})
+  Page<LibraryCardRequest> findAll(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"user"})
-    Optional<LibraryCardRequest> findWithUserById(UUID id);
+  @EntityGraph(attributePaths = {"user"})
+  Optional<LibraryCardRequest> findWithUserById(UUID id);
 
-    boolean existsByUserIdAndStatus(UUID userId, LibraryCardRequestStatus status);
+  boolean existsByUserIdAndStatus(UUID userId, LibraryCardRequestStatus status);
 }

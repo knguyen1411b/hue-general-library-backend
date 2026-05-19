@@ -1,4 +1,6 @@
 spring:
+  dotenv:
+    enabled: false
   application:
     name: test-app
     version: test

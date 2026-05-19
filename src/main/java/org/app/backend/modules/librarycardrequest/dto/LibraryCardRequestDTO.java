@@ -12,16 +12,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LibraryCardRequestDTO {
-    private UUID id;
-    private UUID userId;
-    private String username;
-    private String fullName;
-    private String email;
-    private String phone;
-    private String avatarUrl;
-    private String deliveryAddress;
-    private String note;
-    private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+  private UUID id;
+  private UUID userId;
+  private String username;
+  private String fullName;
+  private String email;
+  private String phone;
+  private String avatarUrl;
+  private String deliveryAddress;
+  private String note;
+  private String status;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
 }
