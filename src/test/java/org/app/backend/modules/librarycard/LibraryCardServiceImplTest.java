@@ -71,9 +71,11 @@ class LibraryCardServiceImplTest {
   void testFindById_NotFound() {
     when(libraryCardRepository.findById(cardId)).thenReturn(Optional.empty());
 
-    RuntimeException ex =
-        assertThrows(RuntimeException.class, () -> libraryCardService.findById(cardId));
-    assertEquals("Library card not found", ex.getMessage());
+    org.app.backend.common.exception.AppException ex =
+        assertThrows(
+            org.app.backend.common.exception.AppException.class,
+            () -> libraryCardService.findById(cardId));
+    assertEquals("Không tìm thấy thẻ thư viện", ex.getMessage());
   }
 
   @Test
